@@ -178,13 +178,13 @@
 
                         /* 항상 kgy0077@naver.com 고정 (localStorage 이전 값 우회) */
                         var toEmail = 'kgy0077@naver.com';
-                        var toPhone = '042-477-6764';
+                        var toPhone = '010-4607-6764';
                         try {
                             if (typeof WeiminCMS !== 'undefined') {
                                 var e = WeiminCMS.get('office.email');
-                                var p = WeiminCMS.get('office.phone');
+                                var m = WeiminCMS.get('office.mobile');
                                 if (e && e !== 'weimin@admin.kr') toEmail = e;
-                                if (p && p !== '000-0000-0000') toPhone = p;
+                                if (m && m !== '000-0000-0000') toPhone = m;
                             }
                         } catch(ex) {}
 
