@@ -613,28 +613,54 @@ a { text-decoration: none; color: inherit; }
 .upload-zone p { color: var(--text-sub); font-size: 15px; }
 
 /* ── RESPONSIVE ── */
+
+/* 넓은 태블릿: nav 간격 자동 축소 */
+@media (max-width: 1100px) {
+    .nav-list { gap: 18px; }
+}
+
+/* 태블릿 (960px 이하) */
 @media (max-width: 960px) {
-    .service-grid { grid-template-columns: repeat(2, 1fr); }
-    .partner-cards { grid-template-columns: 1fr; }
-    .contact-grid { grid-template-columns: 1fr; }
+    .service-grid   { grid-template-columns: repeat(2, 1fr); }
+    .partner-cards  { grid-template-columns: 1fr; }
+    .contact-grid   { grid-template-columns: 1fr; }
     .service-layout { grid-template-columns: 1fr; }
-    .sidebar { position: static; }
-    .hero h1 { font-size: 36px; white-space: normal; }
+    .sidebar        { position: static; }
+    .hero h1        { font-size: 36px; white-space: normal; }
     .hero h1 strong { font-size: 42px; display: inline; }
 }
 
-@media (max-width: 640px) {
-    .service-grid  { grid-template-columns: 1fr; }
-    .process-steps { flex-direction: column; }
-    .step-arrow    { transform: rotate(90deg); }
-    .nav { display: none; }
-    .btn-call { display: none; }
+/* 모바일 메뉴 전환: 900px 이하에서 햄버거 메뉴로 전환 */
+@media (max-width: 900px) {
+    .nav             { display: none; }
+    .btn-call        { display: none; }
     .mobile-menu-btn { display: block; }
-    .hero h1 { font-size: 28px; white-space: normal; }
+}
+
+/* 소형 태블릿 / 모바일 (640px 이하) */
+@media (max-width: 640px) {
+    .service-grid   { grid-template-columns: 1fr; }
+    .process-steps  { flex-direction: column; }
+    .step-arrow     { transform: rotate(90deg); }
+    .hero h1        { font-size: 28px; white-space: normal; }
     .hero h1 strong { font-size: 32px; display: inline; }
-    .partner-cards { grid-template-columns: 1fr 1fr; }
-    .service-list { grid-template-columns: 1fr; }
-    .footer-grid { grid-template-columns: 1fr; }
+    .partner-cards  { grid-template-columns: 1fr 1fr; }
+    .service-list   { grid-template-columns: 1fr; }
+    .footer-grid    { grid-template-columns: 1fr; }
+}
+
+/* 소형 모바일 (480px 이하) */
+@media (max-width: 480px) {
+    .logo-name           { font-size: 15px; letter-spacing: 1px; }
+    .logo-mark           { width: 36px; height: 36px; }
+    .hero-left h1        { font-size: 24px; }
+    .hero-left h1 strong { font-size: 28px; }
+    .hero-svc-item       { padding: 8px 12px; font-size: 13px; }
+    .hero-svc-icon       { font-size: 18px; }
+    .section-header h2   { font-size: 26px; }
+    .partner-cards       { grid-template-columns: 1fr; }
+    .contact-form        { padding: 22px 16px; }
+    .step                { min-width: 100%; max-width: 100%; }
 }
 
 /* ============================================================
@@ -675,6 +701,17 @@ body.homepage .mobile-menu {
     position: absolute;
     top: 68px; left: 0; right: 0;
     z-index: 998;
+}
+
+/* ── 모바일: 한 화면 고정 해제 → 일반 스크롤로 전환 ── */
+@media (max-width: 860px) {
+    body.homepage             { height: auto; overflow-y: auto; }
+    body.homepage .hero       { flex: none; min-height: auto; padding: 40px 0 52px; }
+    body.homepage .footer     { padding-top: 28px; }
+    body.homepage .footer-main   { padding-bottom: 20px; }
+    body.homepage .footer-info   { padding: 14px 0 10px; }
+    body.homepage .footer-bottom { padding: 12px; }
+    .gov-cert                 { margin-bottom: 14px; }
 }
 
 /* ── 서브 페이지 배너 ── */
