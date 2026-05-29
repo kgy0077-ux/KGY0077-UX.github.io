@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>행정사사무소 위민 | 전문 행정서비스</title>
+    <meta name="description" content="행정사사무소 위민 - 인허가, 인증, 출입국, 조달, 행정심판, 사실조사 전문 행정사 사무소">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="homepage">
+
+<!-- ===== HEADER ===== -->
+<header class="header" id="header">
+    <div class="container">
+        <div class="header-inner">
+            <a href="index.html" class="logo">
+                <img src="images/행정사마크.png" alt="행정사회" class="logo-mark">
+                <span class="logo-name">행정사사무소 위민</span>
+            </a>
+            <nav class="nav">
+                <ul class="nav-list">
+                    <li><a href="pages/소개/index.html">사무소 소개</a></li>
+                    <li class="has-dropdown">
+                        <a href="pages/서비스/index.html">업무 분야</a>
+                        <ul class="nav-dropdown">
+                            <li><a href="pages/서비스/index.html?svc=인허가">📋 인허가</a></li>
+                            <li><a href="pages/서비스/index.html?svc=인증">🏆 인증</a></li>
+                            <li><a href="pages/서비스/index.html?svc=출입국">✈️ 출입국</a></li>
+                            <li><a href="pages/서비스/index.html?svc=조달">🏛️ 조달</a></li>
+                            <li><a href="pages/서비스/index.html?svc=행정심판">⚖️ 행정심판</a></li>
+                            <li><a href="pages/서비스/index.html?svc=사실조사">🔍 사실조사</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="pages/절차/index.html">업무 절차</a></li>
+                    <li><a href="pages/상담/index.html">상담 문의</a></li>
+                </ul>
+            </nav>
+            <a href="tel:042-477-6764" class="btn-call">📞 042-477-6764</a>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMenu()">☰</button>
+        </div>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+        <ul>
+            <li><a href="pages/소개/index.html">사무소 소개</a></li>
+            <li class="mobile-menu-group"><span>업무 분야</span>
+                <ul>
+                    <li><a href="pages/서비스/index.html?svc=인허가">📋 인허가</a></li>
+                    <li><a href="pages/서비스/index.html?svc=인증">🏆 인증</a></li>
+                    <li><a href="pages/서비스/index.html?svc=출입국">✈️ 출입국</a></li>
+                    <li><a href="pages/서비스/index.html?svc=조달">🏛️ 조달</a></li>
+                    <li><a href="pages/서비스/index.html?svc=행정심판">⚖️ 행정심판</a></li>
+                    <li><a href="pages/서비스/index.html?svc=사실조사">🔍 사실조사</a></li>
+                </ul>
+            </li>
+            <li><a href="pages/절차/index.html">업무 절차</a></li>
+            <li><a href="pages/상담/index.html">상담 문의</a></li>
+        </ul>
+    </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="container">
+        <div class="hero-split">
+            <div class="hero-left">
+                <h1>행정사사무소 <strong>위민</strong></h1>
+                <div class="gov-cert">
+                    <img src="images/gov-logo.jpg" alt="대한민국정부" class="gov-cert-img">
+                    <span>법무부 출입국민원 대행기관</span>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="hero-svc-list">
+                    <a href="pages/서비스/index.html?svc=인허가" class="hero-svc-item">
+                        <span class="hero-svc-icon">📋</span>
+                        <span class="hero-svc-name">인허가</span>
+                    </a>
+                    <a href="pages/서비스/index.html?svc=인증" class="hero-svc-item">
+                        <span class="hero-svc-icon">🏆</span>
+                        <span class="hero-svc-name">인증</span>
+                    </a>
+                    <a href="pages/서비스/index.html?svc=출입국" class="hero-svc-item">
+                        <span class="hero-svc-icon">✈️</span>
+                        <span class="hero-svc-name">출입국</span>
+                    </a>
+                    <a href="pages/서비스/index.html?svc=조달" class="hero-svc-item">
+                        <span class="hero-svc-icon">🏛️</span>
+                        <span class="hero-svc-name">조달</span>
+                    </a>
+                    <a href="pages/서비스/index.html?svc=행정심판" class="hero-svc-item">
+                        <span class="hero-svc-icon">⚖️</span>
+                        <span class="hero-svc-name">행정심판</span>
+                    </a>
+                    <a href="pages/서비스/index.html?svc=사실조사" class="hero-svc-item">
+                        <span class="hero-svc-icon">🔍</span>
+                        <span class="hero-svc-name">사실조사</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-main">
+            <div class="footer-left">
+                <p class="footer-tagline">전문적인 행정서비스로 고객의 권익을 보호합니다</p>
+            </div>
+            <div class="footer-right">
+                <span style="font-size:15px;font-weight:800;color:#fff;letter-spacing:1px;">행정사사무소 위민</span>
+            </div>
+        </div>
+        <div class="footer-info">
+            <span>📍 대전광역시 서구 둔산대로 117번길 66, 208호</span>
+            <span>📞 010-4607-6764</span>
+            <span>🏢 042-477-6764</span>
+            <span>📠 팩스 0504-299-6764</span>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 행정사사무소 위민. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

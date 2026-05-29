@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>업무 분야 - 행정사사무소 위민</title>
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+<header class="header" id="header">
+    <div class="container">
+        <div class="header-inner">
+            <a href="../../index.html" class="logo">
+                <img src="../../images/행정사마크.png" alt="행정사회" class="logo-mark">
+                <span class="logo-name">행정사사무소 위민</span>
+            </a>
+            <nav class="nav">
+                <ul class="nav-list">
+                    <li><a href="../소개/index.html">사무소 소개</a></li>
+                    <li class="has-dropdown">
+                        <a href="../서비스/index.html" class="nav-active">업무 분야</a>
+                        <ul class="nav-dropdown">
+                            <li><a href="../서비스/index.html?svc=인허가">📋 인허가</a></li>
+                            <li><a href="../서비스/index.html?svc=인증">🏆 인증</a></li>
+                            <li><a href="../서비스/index.html?svc=출입국">✈️ 출입국</a></li>
+                            <li><a href="../서비스/index.html?svc=조달">🏛️ 조달</a></li>
+                            <li><a href="../서비스/index.html?svc=행정심판">⚖️ 행정심판</a></li>
+                            <li><a href="../서비스/index.html?svc=사실조사">🔍 사실조사</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="../절차/index.html">업무 절차</a></li>
+                    <li><a href="../상담/index.html">상담 문의</a></li>
+                </ul>
+            </nav>
+            <a href="tel:042-477-6764" class="btn-call">📞 042-477-6764</a>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMenu()">☰</button>
+        </div>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+        <ul>
+            <li><a href="../소개/index.html">사무소 소개</a></li>
+            <li class="mobile-menu-group"><span>업무 분야</span>
+                <ul>
+                    <li><a href="?svc=인허가">📋 인허가</a></li>
+                    <li><a href="?svc=인증">🏆 인증</a></li>
+                    <li><a href="?svc=출입국">✈️ 출입국</a></li>
+                    <li><a href="?svc=조달">🏛️ 조달</a></li>
+                    <li><a href="?svc=행정심판">⚖️ 행정심판</a></li>
+                    <li><a href="?svc=사실조사">🔍 사실조사</a></li>
+                </ul>
+            </li>
+            <li><a href="../절차/index.html">업무 절차</a></li>
+            <li><a href="../상담/index.html">상담 문의</a></li>
+        </ul>
+    </div>
+</header>
+
+<!-- 페이지 배너 -->
+<div class="page-banner" style="background:linear-gradient(135deg,#0a1929,#1B4F8A,#1E88E5);">
+    <div class="container">
+        <h1>업무 분야</h1>
+        <p>인허가 &nbsp;·&nbsp; 인증 &nbsp;·&nbsp; 출입국 &nbsp;·&nbsp; 조달 &nbsp;·&nbsp; 행정심판 &nbsp;·&nbsp; 사실조사</p>
+    </div>
+</div>
+
+<!-- 서비스 카드 -->
+<section class="services" style="padding:70px 0;">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-badge">업무 분야</span>
+            <h2>전문 행정서비스</h2>
+            <p>위민 행정사사무소는 다양한 분야의 행정 업무를 전문적으로 처리합니다</p>
+        </div>
+        <div class="service-grid">
+
+            <a href="#" onclick="openSvc('인허가');return false;" class="service-card">
+                <div class="card-head">
+                    <div class="card-icon-wrap" style="background:linear-gradient(135deg,#1565C0,#1E88E5);">
+                        <div class="card-icon">📋</div>
+                    </div>
+                    <h3>인허가</h3>
+                </div>
+                <div class="card-body">
+                    <p>각종 사업 인허가 신청 및 갱신, 허가·등록·신고 대행</p>
+                    <div class="card-tags">
+                        <span>영업허가</span><span>건축허가</span><span>개설허가</span>
+                    </div>
+                </div>
+                <div class="card-footer">자세히 보기 →</div>
+            </a>
+
+            <a href="#" onclick="openSvc('인증');return false;" class="service-card">
+                <div class="card-head">
+                    <div class="card-icon-wrap" style="background:linear-gradient(135deg,#F57F17,#FFA000);">
+                        <div class="card-icon">🏆</div>
+                    </div>
+                    <h3>인증</h3>
+                </div>
+                <div class="card-body">
+                    <p>각종 인증 취득 및 갱신, ISO·벤처·이노비즈 등 인증 대행</p>
+                    <div class="card-tags">
+                        <span>ISO 인증</span><span>벤처인증</span><span>이노비즈</span>
+                    </div>
+                </div>
+                <div class="card-footer">자세히 보기 →</div>
+            </a>
+
+            <a href="#" onclick="openSvc('출입국');return false;" class="service-card">
+                <div class="card-head">
+                    <div class="card-icon-wrap" style="background:linear-gradient(135deg,#2E7D32,#43A047);">
+                        <div class="card-icon">✈️</div>
+                    </div>
+                    <h3>출입국</h3>
+                </div>
+                <div class="card-body">
+                    <p>비자 신청·연장·변경, 외국인 체류허가, 귀화 신청</p>
+                    <div class="card-tags">
+                        <span>비자 신청</span><span>체류허가</span><span>귀화신청</span>
+                    </div>
+                </div>
+                <div class="card-footer">자세히 보기 →</div>
+            </a>
+
+            <a href="#" onclick="openSvc('조달');return false;" class="service-card">
+                <div class="card-head">
+                    <div class="card-icon-wrap" style="background:linear-gradient(135deg,#E65100,#FB8C00);">
+                        <div class="card-icon">🏛️</div>
+                    </div>
+                    <h3>조달</h3>
+                </div>
+                <div class="card-body">
+                    <p>정부 조달 입찰 지원, 나라장터 등록, 계약 체결 대행</p>
+                    <div class="card-tags">
+                        <span>조달 입찰</span><span>나라장터</span><span>계약 지원</span>
+                    </div>
+                </div>
+                <div class="card-footer">자세히 보기 →</div>
+            </a>
+
+            <a href="#" onclick="openSvc('행정심판');return false;" class="service-card">
+                <div class="card-head">
+                    <div class="card-icon-wrap" style="background:linear-gradient(135deg,#880E4F,#D81B60);">
+                        <div class="card-icon">⚖️</div>
+                    </div>
+                    <h3>행정심판</h3>
+                </div>
+                <div class="card-body">
+                    <p>행정처분 불복 심판 청구, 취소·의무이행·부작위 심판 대리</p>
+                    <div class="card-tags">
+                        <span>처분 취소</span><span>의무이행</span><span>부작위</span>
+                    </div>
+                </div>
+                <div class="card-footer">자세히 보기 →</div>
+            </a>
+
+            <a href="#" onclick="openSvc('사실조사');return false;" class="service-card">
+                <div class="card-head">
+                    <div class="card-icon-wrap" style="background:linear-gradient(135deg,#4A148C,#7B1FA2);">
+                        <div class="card-icon">🔍</div>
+                    </div>
+                    <h3>사실조사</h3>
+                </div>
+                <div class="card-body">
+                    <p>현지 사실 확인 및 조사, 사실확인서 작성, 공적 증명 업무</p>
+                    <div class="card-tags">
+                        <span>현지 조사</span><span>사실확인</span><span>현황 조사</span>
+                    </div>
+                </div>
+                <div class="card-footer">자세히 보기 →</div>
+            </a>
+
+        </div>
+    </div>
+</section>
+
+<!-- 서비스 상세 모달 -->
+<div id="svcOverlay" class="svc-overlay" onclick="if(event.target===this)closeSvc()">
+    <div class="svc-modal">
+        <button class="svc-close" onclick="closeSvc()">✕</button>
+        <div id="svcContent"></div>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-main">
+            <div class="footer-left">
+                <p class="footer-tagline">전문적인 행정서비스로 고객의 권익을 보호합니다</p>
+            </div>
+            <div class="footer-right">
+                <a href="../../index.html" class="logo">
+                    <img src="../../images/행정사마크.png" alt="행정사회" class="logo-mark">
+                    <span class="logo-name">행정사사무소 위민</span>
+                </a>
+            </div>
+        </div>
+        <div class="footer-info">
+            <span>📍 대전광역시 서구 둔산대로 117번길 66, 208호</span>
+            <span>📞 042-477-6764</span>
+            <span>📠 팩스 0504-299-6764</span>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 행정사사무소 위민. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="../../js/main.js"></script>
+<script>
+    /* URL 파라미터로 서비스 모달 자동 오픈 */
+    document.addEventListener('DOMContentLoaded', function () {
+        const svc = new URLSearchParams(location.search).get('svc');
+        if (svc && typeof openSvc === 'function') {
+            setTimeout(function () { openSvc(svc); }, 250);
+        }
+    });
+</script>
+</body>
+</html>

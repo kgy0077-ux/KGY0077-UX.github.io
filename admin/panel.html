@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리 패널 - 행정사사무소 위민</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --sidebar-w: 220px;
+            --topbar-h: 56px;
+            --primary:  #1B4F8A;
+            --accent:   #E65100;
+            --bg:       #F0F4F8;
+            --border:   #DDE3EC;
+            --text:     #1a2230;
+            --sub:      #5a6a7e;
+            --card:     #ffffff;
+            --sh:       0 2px 10px rgba(0,0,0,.07);
+        }
+
+        body { font-family: 'Malgun Gothic','맑은 고딕',sans-serif; background: var(--bg); color: var(--text); }
+
+        /* ── TOP BAR ── */
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            height: var(--topbar-h); background: #070f1a;
+            display: flex; align-items: center; padding: 0 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.4);
+        }
+        .tb-logo { display: flex; flex-direction: column; line-height: 1.1; margin-right: auto; }
+        .tb-logo-sub  { font-size: 10px; color: #6b7e96; letter-spacing: 1px; }
+        .tb-logo-main { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: 2px; }
+        .tb-badge {
+            background: rgba(255,213,79,.15); color: #FFD54F;
+            border: 1px solid rgba(255,213,79,.3);
+            font-size: 11px; padding: 3px 12px; border-radius: 50px;
+            margin-left: 12px; letter-spacing: 1px;
+        }
+        .tb-actions { display: flex; gap: 10px; }
+        .tb-btn {
+            padding: 7px 16px; border-radius: 7px; font-size: 13px;
+            font-weight: 600; text-decoration: none; cursor: pointer;
+            border: none; font-family: inherit; transition: all .2s;
+        }
+        .tb-view    { background: rgba(255,255,255,.1); color: #ccd; }
+        .tb-view:hover { background: rgba(255,255,255,.2); color: #fff; }
+        .tb-logout  { background: rgba(200,60,60,.2); color: #f99; }
+        .tb-logout:hover { background: rgba(200,60,60,.4); }
+        .tb-save    { background: var(--accent); color: #fff; }
+        .tb-save:hover { background: #BF360C; }
+
+        /* ── LAYOUT ── */
+        .layout {
+            display: flex;
+            margin-top: var(--topbar-h);
+            min-height: calc(100vh - var(--topbar-h));
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: var(--sidebar-w); flex-shrink: 0;
+            background: #0D2B4E;
+            position: fixed; top: var(--topbar-h); bottom: 0; left: 0;
+            overflow-y: auto; display: flex; flex-direction: column;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+
+        .nav-group-label {
+            font-size: 10px; color: rgba(255,255,255,.3); letter-spacing: 2px;
+            padding: 18px 18px 6px; text-transform: uppercase;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 18px; cursor: pointer;
+            font-size: 14px; color: #8899aa;
+            transition: all .18s; border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+        .nav-item:hover { background: rgba(255,255,255,.05); color: #ccd; }
+        .nav-item.active {
+            background: rgba(255,255,255,.08); color: #fff;
+            border-left-color: var(--accent);
+        }
+        .nav-item .nav-icon { font-size: 18px; flex-shrink: 0; }
+        .nav-item .nav-label { font-weight: 600; }
+
+        .sidebar-bottom { margin-top: auto; padding: 16px; }
+        .btn-reset-all {
+            width: 100%; padding: 10px; background: rgba(200,60,60,.15);
+            color: #f99; border: 1px solid rgba(200,60,60,.25); border-radius: 8px;
+            font-size: 13px; font-weight: 600; font-family: inherit;
+            cursor: pointer; transition: all .2s;
+        }
+        .btn-reset-all:hover { background: rgba(200,60,60,.3); }
+
+        /* ── MAIN CONTENT ── */
+        .main-content {
+            margin-left: var(--sidebar-w);
+            flex: 1; padding: 32px;
+            max-width: calc(100% - var(--sidebar-w));
+        }
+        .section-wrap { max-width: 780px; }
+
+        /* ── SECTION HEADER ── */
+        .section-hd {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        .section-hd-left { display: flex; align-items: center; gap: 14px; }
+        .section-hd-icon { font-size: 36px; }
+        .section-hd h2  { font-size: 22px; font-weight: 800; color: var(--primary); }
+        .section-hd p   { font-size: 13px; color: var(--sub); margin-top: 3px; }
+        .btn-preview {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--card); border: 1px solid var(--border);
+            color: var(--primary); padding: 8px 18px; border-radius: 8px;
+            font-size: 13px; font-weight: 600; text-decoration: none;
+            transition: all .2s; white-space: nowrap;
+        }
+        .btn-preview:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--card); border-radius: 14px;
+            box-shadow: var(--sh); padding: 28px; margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 14px; font-weight: 800; color: var(--primary);
+            margin-bottom: 20px; padding-bottom: 12px;
+            border-bottom: 2px solid #EEF4FF;
+        }
+
+        /* ── FIELDS ── */
+        .field { margin-bottom: 22px; }
+        .field:last-child { margin-bottom: 0; }
+        .field-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .field-label  { font-size: 13px; font-weight: 700; color: var(--text); }
+        .field-hint   { font-size: 11px; color: var(--sub); margin-top: 5px; }
+        .btn-default  {
+            font-size: 11px; color: var(--sub); background: none; border: none;
+            cursor: pointer; padding: 2px 8px; border-radius: 4px;
+            transition: all .15s; font-family: inherit;
+        }
+        .btn-default:hover { background: #EEF4FF; color: var(--primary); }
+
+        .field-input, .field-textarea {
+            width: 100%; padding: 12px 15px;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            font-size: 14px; font-family: inherit; color: var(--text);
+            background: #FAFCFF; outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .field-input:focus, .field-textarea:focus {
+            border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,79,138,.1);
+        }
+        .field-input.changed, .field-textarea.changed {
+            border-color: #43A047; background: #F1F8E9;
+        }
+        .field-textarea { resize: vertical; min-height: 130px; line-height: 1.7; }
+        .field-doclist  { min-height: 220px; }
+
+        /* ── DOCLIST HINT ── */
+        .doclist-preview {
+            margin-top: 10px; padding: 12px 16px;
+            background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px;
+        }
+        .doclist-preview-title { font-size: 11px; color: var(--sub); margin-bottom: 6px; font-weight: 700; }
+        .doclist-preview ul { list-style: none; }
+        .doclist-preview li {
+            font-size: 13px; color: var(--text); padding: 4px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .doclist-preview li:last-child { border-bottom: none; }
+        .doclist-preview li::before { content: '📄'; font-size: 13px; }
+
+        /* ── SAVE BAR ── */
+        .save-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px 24px; margin-bottom: 24px;
+            box-shadow: var(--sh);
+        }
+        .save-bar-msg { font-size: 13px; color: var(--sub); }
+        .save-bar-msg strong { color: var(--primary); }
+        .btn-save-section {
+            background: var(--accent); color: #fff; border: none; cursor: pointer;
+            padding: 11px 28px; border-radius: 9px; font-size: 14px;
+            font-weight: 800; font-family: inherit; transition: all .2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-save-section:hover { background: #BF360C; transform: translateY(-1px); }
+
+        /* ── PASSWORD SECTION ── */
+        .pw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 640px) { .pw-grid { grid-template-columns: 1fr; } }
+
+        /* ── STATS GRID ── */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        @media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr; } }
+
+        /* ── TOAST ── */
+        #toast {
+            position: fixed; bottom: 28px; right: 28px; z-index: 99999;
+            padding: 13px 22px; border-radius: 10px;
+            font-size: 14px; font-weight: 700; font-family: inherit;
+            box-shadow: 0 6px 24px rgba(0,0,0,.18);
+            transform: translateY(80px); opacity: 0;
+            transition: all .3s cubic-bezier(.34,1.56,.64,1);
+            pointer-events: none;
+        }
+        #toast.show { transform: translateY(0); opacity: 1; }
+        #toast.success { background: #1B5E20; color: #fff; }
+        #toast.error   { background: #B71C1C; color: #fff; }
+        #toast.info    { background: var(--primary); color: #fff; }
+
+        /* ── SECTION COLOR BADGES ── */
+        .svc-badge {
+            display: inline-block; padding: 3px 14px; border-radius: 50px;
+            font-size: 12px; font-weight: 700; margin-bottom: 16px; color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+    <div class="tb-logo">
+        <span class="tb-logo-sub">행정사사무소</span>
+        <span class="tb-logo-main">위민</span>
+    </div>
+    <span class="tb-badge">관리 패널</span>
+    <div class="tb-actions" style="margin-left:auto;">
+        <a href="../index.html" target="_blank" class="tb-btn tb-view">🌐 사이트 보기</a>
+        <button class="tb-btn tb-save" onclick="saveAll()">💾 전체 저장</button>
+        <a href="index.html?from=logout" onclick="WeiminCMS.logout()" class="tb-btn tb-logout">로그아웃</a>
+    </div>
+</header>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="nav-group-label">기본</div>
+        <a class="nav-item" data-section="basic" onclick="showSection('basic')">
+            <span class="nav-icon">📌</span><span class="nav-label">기본 정보</span>
+        </a>
+        <a class="nav-item" data-section="main" onclick="showSection('main')">
+            <span class="nav-icon">🏠</span><span class="nav-label">메인 페이지</span>
+        </a>
+
+        <div class="nav-group-label">업무 분야</div>
+        <a class="nav-item" data-section="인허가" onclick="showSection('인허가')">
+            <span class="nav-icon">📋</span><span class="nav-label">인허가</span>
+        </a>
+        <a class="nav-item" data-section="인증" onclick="showSection('인증')">
+            <span class="nav-icon">🏆</span><span class="nav-label">인증</span>
+        </a>
+        <a class="nav-item" data-section="출입국" onclick="showSection('출입국')">
+            <span class="nav-icon">✈️</span><span class="nav-label">출입국</span>
+        </a>
+        <a class="nav-item" data-section="조달" onclick="showSection('조달')">
+            <span class="nav-icon">🏛️</span><span class="nav-label">조달</span>
+        </a>
+        <a class="nav-item" data-section="행정심판" onclick="showSection('행정심판')">
+            <span class="nav-icon">⚖️</span><span class="nav-label">행정심판</span>
+        </a>
+        <a class="nav-item" data-section="사실조사" onclick="showSection('사실조사')">
+            <span class="nav-icon">🔍</span><span class="nav-label">사실조사</span>
+        </a>
+
+        <div class="nav-group-label">시스템</div>
+        <a class="nav-item" data-section="security" onclick="showSection('security')">
+            <span class="nav-icon">🔐</span><span class="nav-label">보안 설정</span>
+        </a>
+
+        <div class="sidebar-bottom">
+            <button class="btn-reset-all" onclick="confirmResetAll()">↩ 전체 초기화</button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-content">
+        <div class="section-wrap" id="sectionContent">
+            <!-- JS로 생성 -->
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script src="../js/main.js"></script>
+<script>
+/* ── 인증 확인 ── */
+if (!WeiminCMS.isAdmin()) { location.href = 'index.html'; }
+
+/* ── 섹션 정의 ── */
+const SECTIONS = {
+    basic: {
+        icon: '📌', title: '기본 정보',
+        desc: '전화번호·이메일 등 연락처 정보 — 푸터·상담 페이지에 자동 반영됩니다',
+        preview: '../pages/상담/index.html',
+        cards: [
+            {
+                title: '연락처',
+                fields: [
+                    { key: 'office.mobile',  label: '전화번호 (휴대전화)', type: 'text', hint: '하이픈 포함 형식으로 입력하세요 (예: 010-4607-6764) — 푸터·상담 페이지에 자동 반영됩니다', placeholder: '010-4607-6764' },
+                    { key: 'office.phone',   label: '사무실 전화번호', type: 'text',  hint: '하이픈 포함 형식으로 입력하세요 (예: 042-477-6764) — 헤더·푸터·상담 페이지 모든 전화 링크에 자동 반영됩니다', placeholder: '042-477-6764' },
+                    { key: 'office.email',   label: '이메일 주소', type: 'text',  hint: '상담 신청 이메일이 이 주소로 발송됩니다', placeholder: 'kgy0077@naver.com' },
+                    { key: 'office.address', label: '사무소 주소', type: 'text',  placeholder: '대전광역시 서구 둔산대로 117번길 66, 208호' },
+                    { key: 'office.hours',   label: '운영 시간',   type: 'text',  placeholder: '평일 09:00 - 18:00' },
+                ]
+            }
+        ]
+    },
+    main: {
+        icon: '🏠', title: '페이지 안내 문구',
+        desc: '각 페이지에 표시되는 안내 문구를 수정합니다',
+        preview: '../pages/상담/index.html',
+        cards: [
+            {
+                title: '상담 문의 페이지',
+                fields: [
+                    { key: 'contact.intro', label: '상담 배너 문구', type: 'text', hint: '상담 문의 페이지 배너 아래에 표시됩니다', placeholder: '친절하게 안내해 드리겠습니다' },
+                ]
+            },
+            {
+                title: '사무소 소개 (사이트 내 텍스트)',
+                fields: [
+                    { key: 'about.desc1', label: '소개 단락 1', type: 'textarea', placeholder: '위민 소개 첫 번째 단락' },
+                    { key: 'about.desc2', label: '소개 단락 2', type: 'textarea', placeholder: '위민 소개 두 번째 단락' },
+                ]
+            },
+        ]
+    },
+    인허가: {
+        icon: '📋', title: '인허가 서비스', color: '#1565C0',
+        desc: '인허가 서비스 모달의 설명 문구와 필요 서류 목록을 관리합니다',
+        preview: '../pages/서비스/index.html?svc=인허가',
+        svcKey: '인허가',
+        cards: [
+            {
+                title: '페이지 내용',
+                fields: [
+                    { key: 'svc.인허가.hero', label: '페이지 설명 문구', type: 'text' },
+                    { key: 'svc.인허가.docs', label: '필요 서류 목록', type: 'doclist', hint: '한 줄에 하나씩 입력 — Enter로 항목 구분' },
+                ]
+            }
+        ]
+    },
+    인증: {
+        icon: '🏆', title: '인증 서비스', color: '#F57F17',
+        desc: '인증 서비스 모달의 설명 문구와 필요 서류 목록을 관리합니다',
+        preview: '../pages/서비스/index.html?svc=인증',
+        svcKey: '인증',
+        cards: [
+            {
+                title: '페이지 내용',
+                fields: [
+                    { key: 'svc.인증.hero', label: '페이지 설명 문구', type: 'text' },
+                    { key: 'svc.인증.docs', label: '필요 서류 목록', type: 'doclist', hint: '한 줄에 하나씩 입력 — Enter로 항목 구분' },
+                ]
+            }
+        ]
+    },
+    출입국: {
+        icon: '✈️', title: '출입국 서비스', color: '#2E7D32',
+        desc: '출입국 서비스 모달의 설명 문구와 필요 서류 목록을 관리합니다',
+        preview: '../pages/서비스/index.html?svc=출입국',
+        svcKey: '출입국',
+        cards: [
+            {
+                title: '페이지 내용',
+                fields: [
+                    { key: 'svc.출입국.hero', label: '페이지 설명 문구', type: 'text' },
+                    { key: 'svc.출입국.docs', label: '필요 서류 목록', type: 'doclist', hint: '한 줄에 하나씩 입력 — Enter로 항목 구분' },
+                ]
+            }
+        ]
+    },
+    조달: {
+        icon: '🏛️', title: '조달 서비스', color: '#E65100',
+        desc: '조달 서비스 모달의 설명 문구와 필요 서류 목록을 관리합니다',
+        preview: '../pages/서비스/index.html?svc=조달',
+        svcKey: '조달',
+        cards: [
+            {
+                title: '페이지 내용',
+                fields: [
+                    { key: 'svc.조달.hero', label: '페이지 설명 문구', type: 'text' },
+                    { key: 'svc.조달.docs', label: '필요 서류 목록', type: 'doclist', hint: '한 줄에 하나씩 입력 — Enter로 항목 구분' },
+                ]
+            }
+        ]
+    },
+    행정심판: {
+        icon: '⚖️', title: '행정심판 서비스', color: '#880E4F',
+        desc: '행정심판 서비스 모달의 설명 문구와 청구 기간 안내를 관리합니다',
+        preview: '../pages/서비스/index.html?svc=행정심판',
+        svcKey: '행정심판',
+        cards: [
+            {
+                title: '페이지 내용',
+                fields: [
+                    { key: 'svc.행정심판.hero', label: '페이지 설명 문구', type: 'text' },
+                    { key: 'svc.행정심판.docs', label: '청구 기간 안내 목록', type: 'doclist', hint: '한 줄에 하나씩 입력 — Enter로 항목 구분' },
+                ]
+            }
+        ]
+    },
+    사실조사: {
+        icon: '🔍', title: '사실조사 서비스', color: '#4A148C',
+        desc: '사실조사 서비스 모달의 설명 문구와 안내 목록을 관리합니다',
+        preview: '../pages/서비스/index.html?svc=사실조사',
+        svcKey: '사실조사',
+        cards: [
+            {
+                title: '페이지 내용',
+                fields: [
+                    { key: 'svc.사실조사.hero', label: '페이지 설명 문구', type: 'text' },
+                    { key: 'svc.사실조사.docs', label: '조사 필요 경우 목록', type: 'doclist', hint: '한 줄에 하나씩 입력 — Enter로 항목 구분' },
+                ]
+            }
+        ]
+    },
+    security: {
+        icon: '🔐', title: '보안 설정',
+        desc: '관리자 로그인 비밀번호를 변경합니다',
+        preview: null,
+    }
+};
+
+/* ── 현재 섹션 ── */
+let currentSection = 'basic';
+
+/* ── 섹션 표시 ── */
+function showSection(id) {
+    currentSection = id;
+
+    // 사이드바 활성 상태
+    document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.section === id);
+    });
+
+    const sec = SECTIONS[id];
+    const area = document.getElementById('sectionContent');
+
+    if (id === 'security') { renderSecurity(area); return; }
+
+    let html = '';
+
+    // 섹션 헤더
+    const badgeStyle = sec.color ? `style="background:${sec.color}"` : `style="background:#1B4F8A"`;
+    html += `
+        <div class="section-hd">
+            <div class="section-hd-left">
+                <div class="section-hd-icon">${sec.icon}</div>
+                <div>
+                    ${sec.color ? `<span class="svc-badge" ${badgeStyle}>${sec.title}</span>` : ''}
+                    <h2>${sec.color ? '' : sec.title}</h2>
+                    <p>${sec.desc}</p>
+                </div>
+            </div>
+            ${sec.preview ? `<a href="${sec.preview}" target="_blank" class="btn-preview">🌐 페이지 미리보기</a>` : ''}
+        </div>
+    `;
+
+    // 저장 바
+    html += `
+        <div class="save-bar">
+            <div class="save-bar-msg">내용을 수정한 후 <strong>저장하기</strong>를 클릭하세요</div>
+            <button class="btn-save-section" onclick="saveSection('${id}')">💾 저장하기</button>
+        </div>
+    `;
+
+    // 카드별 필드
+    (sec.cards || []).forEach(card => {
+        html += `<div class="card"><div class="card-title">${card.title}</div>`;
+        html += card.isStats ? '<div class="stats-grid">' : '';
+        card.fields.forEach(f => { html += renderField(f, sec.color); });
+        html += card.isStats ? '</div>' : '';
+        html += '</div>';
+    });
+
+    area.innerHTML = html;
+
+    // 문서 목록 미리보기 이벤트
+    area.querySelectorAll('.field-doclist').forEach(ta => {
+        ta.addEventListener('input', () => updateDocPreview(ta));
+        updateDocPreview(ta);
+    });
+
+    // 변경 감지 (테두리 색)
+    area.querySelectorAll('.field-input, .field-textarea, .field-doclist').forEach(el => {
+        const orig = el.value;
+        el.addEventListener('input', () => {
+            el.classList.toggle('changed', el.value !== orig);
+        });
+    });
+}
+
+/* ── 필드 HTML 생성 ── */
+function renderField(f, color) {
+    const val = escHtml(WeiminCMS.get(f.key));
+    const defVal = escHtml(WeiminCMS.DEFAULTS[f.key] || '');
+    const isDoclist = f.type === 'doclist';
+    const isTextarea = f.type === 'textarea' || isDoclist;
+    const cls = isDoclist ? 'field-textarea field-doclist' : (isTextarea ? 'field-textarea' : 'field-input');
+
+    let html = `<div class="field" id="wrap-${f.key.replace(/\./g,'_')}">`;
+    html += `<div class="field-header">
+        <label class="field-label">${f.label}</label>
+        <button class="btn-default" onclick="resetField('${f.key}')">기본값으로</button>
+    </div>`;
+
+    if (isTextarea) {
+        html += `<textarea class="${cls}" data-key="${f.key}" id="fld-${f.key.replace(/\./g,'_')}" placeholder="${f.placeholder||''}">${val}</textarea>`;
+    } else {
+        html += `<input type="text" class="${cls}" data-key="${f.key}" id="fld-${f.key.replace(/\./g,'_')}" value="${val}" placeholder="${f.placeholder||''}">`;
+    }
+
+    if (f.hint) html += `<div class="field-hint">💡 ${f.hint}</div>`;
+
+    if (isDoclist) {
+        html += `<div class="doclist-preview" id="prev-${f.key.replace(/\./g,'_')}">
+            <div class="doclist-preview-title">미리보기</div>
+            <ul></ul>
+        </div>`;
+    }
+
+    html += '</div>';
+    return html;
+}
+
+/* ── 문서 목록 미리보기 업데이트 ── */
+function updateDocPreview(ta) {
+    const key = ta.dataset.key.replace(/\./g,'_');
+    const prev = document.getElementById('prev-' + key);
+    if (!prev) return;
+    const items = ta.value.split('\n').filter(s => s.trim());
+    prev.querySelector('ul').innerHTML = items.map(s => `<li>${escHtml(s.trim())}</li>`).join('') || '<li style="color:#999">항목을 입력하세요</li>';
+}
+
+/* ── 섹션 저장 ── */
+function saveSection(id) {
+    const area = document.getElementById('sectionContent');
+    const data = {};
+    area.querySelectorAll('[data-key]').forEach(el => {
+        data[el.dataset.key] = el.value;
+    });
+
+    /* 전화번호 형식 검증 */
+    if (data['office.mobile'] !== undefined && data['office.mobile'] !== '') {
+        if (data['office.mobile'].indexOf('-') === -1) {
+            toast('⚠️ 휴대전화번호는 하이픈(-) 포함 형식으로 입력해주세요 (예: 010-4607-6764)', 'error');
+            const el = area.querySelector('[data-key="office.mobile"]');
+            if (el) { el.focus(); el.classList.add('changed'); }
+            return;
+        }
+    }
+    if (data['office.phone'] !== undefined && data['office.phone'] !== '') {
+        if (data['office.phone'].indexOf('-') === -1) {
+            toast('⚠️ 사무실 전화번호는 하이픈(-) 포함 형식으로 입력해주세요 (예: 042-477-6764)', 'error');
+            const el = area.querySelector('[data-key="office.phone"]');
+            if (el) { el.focus(); el.classList.add('changed'); }
+            return;
+        }
+    }
+
+    WeiminCMS.setAll(data);
+    area.querySelectorAll('.field-input, .field-textarea, .field-doclist').forEach(el => {
+        el.classList.remove('changed');
+    });
+    toast('저장되었습니다! 사이트에 바로 반영됩니다.', 'success');
+}
+
+/* ── 전체 저장 ── */
+function saveAll() {
+    saveSection(currentSection);
+    toast('모든 변경사항이 저장되었습니다.', 'success');
+}
+
+/* ── 개별 필드 기본값 초기화 ── */
+function resetField(key) {
+    const id = 'fld-' + key.replace(/\./g, '_');
+    const el = document.getElementById(id);
+    if (!el) return;
+    const def = WeiminCMS.DEFAULTS[key] || '';
+    el.value = def;
+    el.classList.remove('changed');
+    WeiminCMS.set(key, def);
+    if (el.classList.contains('field-doclist')) updateDocPreview(el);
+    toast('기본값으로 초기화했습니다.', 'info');
+}
+
+/* ── 전체 초기화 ── */
+function confirmResetAll() {
+    if (confirm('⚠️ 모든 편집 내용을 초기 기본값으로 되돌리겠습니까?\n이 작업은 취소할 수 없습니다.')) {
+        WeiminCMS.resetAll();
+        showSection(currentSection);
+        toast('전체 초기화 완료. 모든 항목이 기본값으로 돌아갔습니다.', 'info');
+    }
+}
+
+/* ── 보안 설정 섹션 ── */
+function renderSecurity(area) {
+    area.innerHTML = `
+        <div class="section-hd">
+            <div class="section-hd-left">
+                <div class="section-hd-icon">🔐</div>
+                <div>
+                    <h2>보안 설정</h2>
+                    <p>관리자 로그인 비밀번호를 변경합니다</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">비밀번호 변경</div>
+
+            <div class="pw-grid">
+                <div class="field">
+                    <div class="field-header"><label class="field-label">현재 비밀번호</label></div>
+                    <input type="password" class="field-input" id="pw-current" placeholder="현재 비밀번호">
+                </div>
+                <div></div>
+                <div class="field">
+                    <div class="field-header"><label class="field-label">새 비밀번호</label></div>
+                    <input type="password" class="field-input" id="pw-new" placeholder="새 비밀번호 (6자 이상)">
+                </div>
+                <div class="field">
+                    <div class="field-header"><label class="field-label">새 비밀번호 확인</label></div>
+                    <input type="password" class="field-input" id="pw-confirm" placeholder="새 비밀번호 재입력">
+                </div>
+            </div>
+
+            <div id="pw-msg" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;"></div>
+
+            <div style="margin-top:20px;">
+                <button class="btn-save-section" onclick="doChangePw()">🔒 비밀번호 변경</button>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:20px;">
+            <div class="card-title">로그인 정보</div>
+            <div style="font-size:14px;color:#5a6a7e;line-height:2;">
+                <p>• 초기 비밀번호: <strong>weimin2024</strong></p>
+                <p>• 비밀번호는 이 기기의 브라우저에 저장됩니다</p>
+                <p>• 비밀번호를 분실한 경우: 브라우저 개발자도구에서 localStorage의 <code>wcms_pw</code> 항목을 삭제하면 초기화됩니다</p>
+            </div>
+        </div>
+    `;
+}
+
+function doChangePw() {
+    const cur     = document.getElementById('pw-current').value;
+    const nw      = document.getElementById('pw-new').value;
+    const confirm = document.getElementById('pw-confirm').value;
+    const msg     = document.getElementById('pw-msg');
+
+    const stored = localStorage.getItem('wcms_pw') || 'weimin2024';
+
+    const show = (text, color) => {
+        msg.style.display = 'block';
+        msg.style.background = color === 'ok' ? '#E8F5E9' : '#FFEBEE';
+        msg.style.color       = color === 'ok' ? '#1B5E20' : '#B71C1C';
+        msg.style.border      = color === 'ok' ? '1px solid #A5D6A7' : '1px solid #FFCDD2';
+        msg.textContent = text;
+    };
+
+    if (!cur)          { show('현재 비밀번호를 입력해주세요.', 'err'); return; }
+    if (cur !== stored){ show('현재 비밀번호가 올바르지 않습니다.', 'err'); return; }
+    if (nw.length < 6) { show('새 비밀번호는 6자 이상이어야 합니다.', 'err'); return; }
+    if (nw !== confirm){ show('새 비밀번호가 일치하지 않습니다.', 'err'); return; }
+
+    WeiminCMS.changePw(nw);
+    show('비밀번호가 성공적으로 변경되었습니다.', 'ok');
+    document.getElementById('pw-current').value = '';
+    document.getElementById('pw-new').value = '';
+    document.getElementById('pw-confirm').value = '';
+    toast('비밀번호가 변경되었습니다.', 'success');
+}
+
+/* ── Toast 알림 ── */
+let _toastTimer = null;
+function toast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = (type === 'success' ? '✅ ' : type === 'error' ? '❌ ' : 'ℹ️ ') + msg;
+    el.className = 'show ' + type;
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { el.className = ''; }, 3000);
+}
+
+/* ── HTML 이스케이프 ── */
+function escHtml(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── 초기 실행 ── */
+showSection('basic');
+</script>
+</body>
+</html>

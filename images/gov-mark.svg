@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- 배경 원 (네이비) -->
+  <circle cx="50" cy="50" r="50" fill="#003478"/>
+  <!-- 흰색 테두리 -->
+  <circle cx="50" cy="50" r="46" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+  <!-- 태극 - 빨간색(양) 상단 반원 -->
+  <path d="M50,17 A33,33 0 0,1 50,83 A16.5,16.5 0 0,0 50,50 A16.5,16.5 0 0,1 50,17Z" fill="#CD2E3A"/>
+  <!-- 태극 - 파란색(음) 하단 반원 -->
+  <path d="M50,83 A33,33 0 0,1 50,17 A16.5,16.5 0 0,0 50,50 A16.5,16.5 0 0,1 50,83Z" fill="#003478"/>
+  <!-- 소태극 원 (빨간) -->
+  <circle cx="50" cy="33.5" r="8.25" fill="#003478"/>
+  <!-- 소태극 원 (파란) -->
+  <circle cx="50" cy="66.5" r="8.25" fill="#CD2E3A"/>
+  <!-- 태극 흰색 테두리 -->
+  <circle cx="50" cy="50" r="33" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <!-- 건(乾) 3효 - 우상단 -->
+  <line x1="72" y1="22" x2="80" y2="14" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="69" y1="25" x2="77" y2="17" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="66" y1="28" x2="74" y2="20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 곤(坤) 3효 - 좌하단 -->
+  <line x1="28" y1="78" x2="20" y2="86" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="31" y1="75" x2="23" y2="83" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="34" y1="72" x2="26" y2="80" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 감(坎) 효 - 좌상단 -->
+  <line x1="22" y1="22" x2="14" y2="14" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="25" y1="25" x2="17" y2="17" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 이(離) 효 - 우하단 -->
+  <line x1="78" y1="78" x2="86" y2="86" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="75" y1="75" x2="83" y2="83" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
