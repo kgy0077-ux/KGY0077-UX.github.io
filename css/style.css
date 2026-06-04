@@ -258,6 +258,15 @@ a { text-decoration: none; color: inherit; }
 }
 .hero-svc-icon { font-size: 22px; }
 .hero-svc-name { letter-spacing: 2px; }
+.hero-svc-plan {
+    background: rgba(231,203,126,.22) !important;
+    border-color: rgba(231,203,126,.55) !important;
+}
+.hero-svc-plan:hover {
+    background: rgba(231,203,126,.38) !important;
+    border-color: rgba(231,203,126,.85) !important;
+    box-shadow: 0 4px 20px rgba(231,203,126,.25) !important;
+}
 @media (max-width: 860px) {
     .hero { min-height: auto; padding: 20px 0 28px; }
     .hero-split { flex-direction: column; gap: 36px; text-align: center; }
