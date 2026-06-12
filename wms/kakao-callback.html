@@ -2,19 +2,53 @@
 <html lang="ko">
 <head><meta charset="UTF-8"><title>카카오 로그인 처리 중...</title>
 <style>body{font-family:'Malgun Gothic',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#FEE500;}
-.msg{text-align:center;font-size:16px;color:#333;}</style>
+.msg{text-align:center;font-size:16px;color:#333;line-height:1.8;}</style>
 </head>
 <body>
 <div class="msg">카카오 로그인 처리 중...<br>잠시 후 자동으로 닫힙니다.</div>
 <script>
-  const hash = window.location.hash.substring(1);
-  const params = new URLSearchParams(hash);
-  const token = params.get('access_token');
-  if (token && window.opener) {
-    window.opener.postMessage({ type: 'kakao_token', token }, 'https://wiminaa.kr');
-    setTimeout(() => window.close(), 500);
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+
+  if (error) {
+    document.querySelector('.msg').textContent = '인증 실패: ' + error + '\n창을 닫아주세요.';
+  } else if (code) {
+    const appKey = localStorage.getItem('wms_kakao_app_key');
+    if (!appKey) {
+      document.querySelector('.msg').textContent = '앱 키 정보가 없습니다. 창을 닫고 다시 시도해주세요.';
+    } else {
+      const body = new URLSearchParams();
+      body.append('grant_type', 'authorization_code');
+      body.append('client_id', appKey);
+      body.append('redirect_uri', 'https://wiminaa.kr/wms/kakao-callback.html');
+      body.append('code', code);
+
+      fetch('https://kauth.kakao.com/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.access_token) {
+          if (window.opener) {
+            window.opener.postMessage({ type: 'kakao_token', token: data.access_token }, 'https://wiminaa.kr');
+            setTimeout(() => window.close(), 500);
+          } else {
+            localStorage.setItem('wms_kakao_token', data.access_token);
+            window.location.href = '/wms/calendar.html';
+          }
+        } else {
+          document.querySelector('.msg').textContent = '토큰 오류: ' + (data.error_description || data.error) + '\n창을 닫아주세요.';
+        }
+      })
+      .catch(() => {
+        document.querySelector('.msg').textContent = '네트워크 오류가 발생했습니다.\n창을 닫고 다시 시도해주세요.';
+      });
+    }
   } else {
-    document.querySelector('.msg').textContent = '인증 실패. 창을 닫아주세요.';
+    document.querySelector('.msg').textContent = '인증 정보가 없습니다. 창을 닫아주세요.';
   }
 </script>
 </body>

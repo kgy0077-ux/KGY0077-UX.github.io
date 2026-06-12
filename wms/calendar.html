@@ -513,8 +513,9 @@ function restoreKakao(){
 function kakaoLogin(){
   const key=document.getElementById('kakaoKey').value.trim();
   if(!key){toast('카카오 앱 키를 먼저 입력해주세요','error');return;}
+  localStorage.setItem('wms_kakao_app_key',key);
   const redirectUri='https://wiminaa.kr/wms/kakao-callback.html';
-  const authUrl=`https://kauth.kakao.com/oauth/authorize?client_id=${key}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=talk_message`;
+  const authUrl=`https://kauth.kakao.com/oauth/authorize?client_id=${key}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=talk_message`;
   const popup=window.open(authUrl,'kakao_login','width=500,height=600,left=200,top=100');
   if(!popup){toast('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.','error');return;}
   window.addEventListener('message',function handler(e){
