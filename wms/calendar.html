@@ -310,7 +310,7 @@
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+<!-- 카카오 SDK 불필요 (REST API 방식으로 변경) -->
 <script src="js/weimin-contracts.js"></script>
 <script>
 WeiminContracts.requireAuth();
@@ -513,13 +513,19 @@ function restoreKakao(){
 function kakaoLogin(){
   const key=document.getElementById('kakaoKey').value.trim();
   if(!key){toast('카카오 앱 키를 먼저 입력해주세요','error');return;}
-  try{
-    if(!Kakao.isInitialized())Kakao.init(key);
-    Kakao.Auth.login({
-      success(auth){localStorage.setItem('wms_kakao_token',auth.access_token);restoreKakao();toast('카카오 로그인 성공!','success');},
-      fail(e){toast('카카오 로그인 실패: '+(e.error_description||''),'error');}
-    });
-  }catch(e){toast('카카오 SDK 오류: '+e.message,'error');}
+  const redirectUri='https://wiminaa.kr/wms/kakao-callback.html';
+  const authUrl=`https://kauth.kakao.com/oauth/authorize?client_id=${key}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=talk_message`;
+  const popup=window.open(authUrl,'kakao_login','width=500,height=600,left=200,top=100');
+  if(!popup){toast('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.','error');return;}
+  window.addEventListener('message',function handler(e){
+    if(e.origin!=='https://wiminaa.kr')return;
+    if(e.data&&e.data.type==='kakao_token'){
+      localStorage.setItem('wms_kakao_token',e.data.token);
+      restoreKakao();
+      toast('카카오 연결 완료!','success');
+      window.removeEventListener('message',handler);
+    }
+  });
 }
 
 /* ── 비밀번호 변경 ── */

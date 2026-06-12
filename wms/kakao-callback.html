@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><title>카카오 로그인 처리 중...</title>
+<style>body{font-family:'Malgun Gothic',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#FEE500;}
+.msg{text-align:center;font-size:16px;color:#333;}</style>
+</head>
+<body>
+<div class="msg">카카오 로그인 처리 중...<br>잠시 후 자동으로 닫힙니다.</div>
+<script>
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const token = params.get('access_token');
+  if (token && window.opener) {
+    window.opener.postMessage({ type: 'kakao_token', token }, 'https://wiminaa.kr');
+    setTimeout(() => window.close(), 500);
+  } else {
+    document.querySelector('.msg').textContent = '인증 실패. 창을 닫아주세요.';
+  }
+</script>
+</body>
+</html>
