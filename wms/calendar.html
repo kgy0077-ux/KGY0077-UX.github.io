@@ -273,6 +273,7 @@
       <div class="mfield"><label>카카오 JavaScript 앱 키</label><input type="text" id="kakaoKey" placeholder="카카오 개발자 콘솔 → 앱 키 → JavaScript 키"><div class="hint">💡 developers.kakao.com → 내 애플리케이션 → 앱 키</div></div>
       <div class="kakao-row">
         <button class="btn-kakao" onclick="kakaoLogin()">🔑 카카오 로그인 (연결)</button>
+        <button class="btn-kakao" style="background:#fff;border:1px solid #ccc;margin-top:6px;" onclick="kakaoTest()">📨 테스트 메시지 발송</button>
         <span class="kakao-st" id="kakaoSt">미연결</span>
       </div>
     </div>
@@ -460,6 +461,19 @@ async function runAlerts() {
   showNotifyBanner(pending,sent,fail,s);
 }
 
+async function kakaoTest(){
+  const token=localStorage.getItem('wms_kakao_token');
+  if(!token){toast('카카오 먼저 연결해주세요','error');return;}
+  try{
+    const text=`[위민행정사] 테스트 알림\n\n카카오 알림이 정상적으로 연결되었습니다! ✅`;
+    const r=await fetch('https://kapi.kakao.com/v2/api/talk/memo/default/send',{
+      method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/x-www-form-urlencoded'},
+      body:'template_object='+encodeURIComponent(JSON.stringify({object_type:'text',text,link:{web_url:'https://wiminaa.kr',mobile_web_url:'https://wiminaa.kr'}}))
+    });
+    if(r.ok)toast('테스트 메시지 발송 완료! 카카오톡을 확인해주세요 📱','success');
+    else{const d=await r.json();toast('발송 실패: '+( d.msg||r.status),'error');}
+  }catch(e){toast('오류: '+e.message,'error');}
+}
 async function sendKakao(token,c,label){
   const text=`[위민행정사] 만기일 알림\n\n의뢰인: ${c.clientName}\n업무: ${c.bizType}${c.bizDetail?' · '+c.bizDetail:''}\n만기일: ${c.expiryDate} (${label})\n연락처: ${c.clientPhone||'—'}`;
   const r=await fetch('https://kapi.kakao.com/v2/api/talk/memo/default/send',{
