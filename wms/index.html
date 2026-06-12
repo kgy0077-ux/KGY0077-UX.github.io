@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>위민 수임관리시스템 — 로그인</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Malgun Gothic','맑은 고딕',sans-serif;
+      background: linear-gradient(135deg, #070f1a 0%, #0D2B4E 60%, #1B4F8A 100%);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    }
+    .wrap { width: 100%; max-width: 440px; padding: 24px; }
+    .card {
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
+      border-radius: 24px; padding: 52px 44px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5); backdrop-filter: blur(12px);
+    }
+    .logo { text-align: center; margin-bottom: 40px; }
+    .logo-sub  { font-size: 12px; color: #6b7e96; letter-spacing: 3px; margin-bottom: 6px; }
+    .logo-main { font-size: 36px; font-weight: 900; color: #fff; letter-spacing: 5px; margin-bottom: 10px; }
+    .logo-badge {
+      display: inline-block; background: rgba(230,81,0,.2);
+      border: 1px solid rgba(230,81,0,.4); color: #FF8A50;
+      font-size: 12px; padding: 5px 18px; border-radius: 50px; letter-spacing: 1px;
+    }
+    .section-title { font-size: 15px; font-weight: 700; color: rgba(255,255,255,.5); text-align: center; margin-bottom: 28px; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 11px; color: #8899aa; margin-bottom: 8px; letter-spacing: 1px; font-weight: 700; }
+    .field input {
+      width: 100%; padding: 15px 18px;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+      border-radius: 12px; color: #fff; font-size: 15px; font-family: inherit;
+      outline: none; transition: all .2s;
+    }
+    .field input:focus { border-color: rgba(230,81,0,.6); background: rgba(255,255,255,.12); box-shadow: 0 0 0 3px rgba(230,81,0,.15); }
+    .field input::placeholder { color: rgba(255,255,255,.25); }
+    .btn-login {
+      width: 100%; padding: 16px; margin-top: 10px;
+      background: linear-gradient(135deg, #E65100, #FF8A50);
+      color: #fff; font-size: 16px; font-weight: 900; font-family: inherit;
+      border: none; border-radius: 12px; cursor: pointer;
+      transition: all .2s; letter-spacing: 1px;
+    }
+    .btn-login:hover { opacity: .9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(230,81,0,.4); }
+    .btn-login:active { transform: scale(.98); }
+    .error-msg {
+      display: none; text-align: center; margin-top: 14px;
+      color: #ff8888; font-size: 13px;
+      background: rgba(255,100,100,.1); border: 1px solid rgba(255,100,100,.2);
+      border-radius: 10px; padding: 12px;
+    }
+    .error-msg.show { display: block; }
+    .hint {
+      text-align: center; margin-top: 28px; padding-top: 20px;
+      font-size: 12px; color: rgba(255,255,255,.25);
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .hint strong { color: rgba(255,255,255,.4); }
+    .version { text-align: center; margin-top: 12px; font-size: 10px; color: rgba(255,255,255,.15); letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="logo">
+      <div class="logo-sub">행정사사무소</div>
+      <div class="logo-main">위민</div>
+      <span class="logo-badge">수임관리시스템</span>
+    </div>
+    <div class="section-title">관리자 로그인</div>
+    <div class="field">
+      <label>비밀번호</label>
+      <input type="password" id="pw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">로그인</button>
+    <div class="error-msg" id="errMsg">비밀번호가 올바르지 않습니다.</div>
+    <div class="hint"></div>
+    <div class="version">위민 수임관리시스템 v1.0</div>
+  </div>
+</div>
+<script src="js/weimin-contracts.js"></script>
+<script>
+  // 이미 로그인된 경우 캘린더로 이동
+  if (WeiminContracts.isLoggedIn()) location.href = 'calendar.html';
+
+  function doLogin() {
+    const pw = document.getElementById('pw').value;
+    if (WeiminContracts.login(pw)) {
+      location.href = 'calendar.html';
+    } else {
+      const el = document.getElementById('errMsg');
+      el.classList.add('show');
+      document.getElementById('pw').value = '';
+      document.getElementById('pw').focus();
+      setTimeout(() => el.classList.remove('show'), 3000);
+    }
+  }
+</script>
+</body>
+</html>

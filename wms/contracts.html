@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수임계약 목록 — 위민 수임관리시스템</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sidebar-w: 220px; --topbar-h: 58px;
+      --primary: #1B4F8A; --accent: #E65100;
+      --bg: #F0F4F8; --border: #DDE3EC;
+      --text: #1a2230; --sub: #5a6a7e;
+      --card: #ffffff; --sh: 0 2px 12px rgba(0,0,0,.07);
+    }
+    body { font-family: 'Malgun Gothic','맑은 고딕',sans-serif; background: var(--bg); color: var(--text); }
+    .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: var(--topbar-h); background: #070f1a; display: flex; align-items: center; padding: 0 24px; box-shadow: 0 2px 12px rgba(0,0,0,.4); }
+    .tb-brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+    .tb-brand-logo { height: 36px; width: auto; object-fit: contain; filter: brightness(1.1); }
+    .tb-brand-text { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: 2px; white-space: nowrap; }
+    .tb-brand-sub  { display: none; }
+    .tb-brand-main { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: 2px; }
+    .tb-badge { background: rgba(230,81,0,.2); color: #FF8A50; border: 1px solid rgba(230,81,0,.3); font-size: 11px; padding: 3px 12px; border-radius: 50px; margin-left: 12px; letter-spacing: 1px; }
+    .tb-actions { display: flex; gap: 10px; }
+    .tb-btn { padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; border: none; font-family: inherit; transition: all .2s; }
+    .tb-new  { background: var(--accent); color: #fff; }
+    .tb-new:hover { background: #BF360C; }
+    .tb-out  { background: rgba(200,60,60,.2); color: #f99; }
+    .tb-out:hover { background: rgba(200,60,60,.35); }
+    .layout { display: flex; margin-top: var(--topbar-h); min-height: calc(100vh - var(--topbar-h)); }
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: #0D2B4E; position: fixed; top: var(--topbar-h); bottom: 0; left: 0; overflow-y: auto; display: flex; flex-direction: column; }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+    .nav-section { font-size: 10px; color: rgba(255,255,255,.25); letter-spacing: 2px; padding: 20px 18px 6px; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 13px 18px; font-size: 14px; color: #8899aa; transition: all .18s; border-left: 3px solid transparent; text-decoration: none; }
+    .nav-item:hover { background: rgba(255,255,255,.05); color: #ccd; }
+    .nav-item.active { background: rgba(255,255,255,.09); color: #fff; border-left-color: var(--accent); }
+    .nav-item .icon { font-size: 18px; flex-shrink: 0; }
+    .nav-item .label { font-weight: 600; }
+    .sidebar-bottom { margin-top: auto; padding: 16px; }
+    .btn-pw { width: 100%; padding: 10px; background: rgba(255,255,255,.06); color: #8899aa; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
+    .btn-pw:hover { background: rgba(255,255,255,.12); color: #ccd; }
+    .main { margin-left: var(--sidebar-w); flex: 1; padding: 32px; }
+    .page-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .page-hd-left { display: flex; align-items: center; gap: 14px; }
+    .page-hd-icon { font-size: 38px; }
+    .page-hd h2 { font-size: 22px; font-weight: 900; color: var(--primary); }
+    .page-hd p  { font-size: 13px; color: var(--sub); margin-top: 3px; }
+    .btn-new { display: inline-flex; align-items: center; gap: 7px; padding: 10px 22px; background: var(--accent); color: #fff; border-radius: 9px; font-size: 14px; font-weight: 700; text-decoration: none; transition: all .2s; }
+    .btn-new:hover { background: #BF360C; transform: translateY(-1px); }
+
+    .drive-banner { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; border-radius: 9px; margin-bottom: 16px; font-size: 12px; }
+    .drive-banner.on  { background: #E8F5E9; border: 1px solid #A5D6A7; color: #1B5E20; }
+    .drive-banner.off { background: #FFF8E1; border: 1px solid #FFD54F; color: #E65100; }
+    .btn-link { padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; }
+    .btn-link.do   { background: var(--accent); color: #fff; }
+    .btn-link.done { background: #2E7D32; color: #fff; cursor: default; }
+
+    /* 통계 */
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
+    @media (max-width: 900px) { .stats { grid-template-columns: repeat(3,1fr); } }
+    .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; box-shadow: var(--sh); cursor: pointer; transition: all .18s; }
+    .stat:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+    .stat-label { font-size: 11px; color: var(--sub); font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
+    .stat-val   { font-size: 26px; font-weight: 900; color: var(--primary); }
+    .stat.red .stat-val  { color: #C62828; }
+    .stat.warn .stat-val { color: #E65100; }
+
+    /* 필터 */
+    .filter { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; box-shadow: var(--sh); }
+    .filter input  { flex: 1; min-width: 160px; padding: 8px 13px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; }
+    .filter select { padding: 8px 13px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; background: #fff; cursor: pointer; }
+    .filter input:focus, .filter select:focus { border-color: var(--primary); }
+    .btn-reset { padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; border: 1.5px solid var(--border); background: white; color: var(--sub); cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .btn-reset:hover { background: var(--bg); }
+
+    /* 카드 */
+    #list { display: flex; flex-direction: column; gap: 12px; }
+    .c-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; box-shadow: var(--sh); display: grid; grid-template-columns: 60px 1fr auto; gap: 16px; align-items: center; transition: box-shadow .18s; }
+    .c-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.1); }
+    .c-card.cl  { border-left: 4px solid #C62828; }
+    .c-card.cw  { border-left: 4px solid #E65100; }
+    .c-card.cca { border-left: 4px solid #F9A825; }
+    .c-card.cok { border-left: 4px solid #2E7D32; }
+    .c-card.cdone { opacity: .65; }
+    .c-ico { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .c-ico-em { font-size: 26px; }
+    .c-ico-lb { font-size: 10px; font-weight: 700; color: var(--sub); white-space: nowrap; }
+    .c-mid { display: flex; flex-direction: column; gap: 5px; }
+    .c-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .c-name   { font-size: 16px; font-weight: 800; }
+    .c-detail { font-size: 12px; color: var(--sub); }
+    .c-meta   { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--sub); }
+    .c-memo   { font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 440px; }
+    .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; }
+    .badge.cl  { background: #FFEBEE; color: #C62828; }
+    .badge.cw  { background: #FFF3E0; color: #E65100; }
+    .badge.cca { background: #FFFDE7; color: #F9A825; }
+    .badge.cok { background: #E8F5E9; color: #2E7D32; }
+    .badge.dn  { background: #ECEFF1; color: #546E7A; }
+    .badge.nn  { background: #F3F4F6; color: #9CA3AF; }
+    .c-right { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+    .st-sel { padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 7px; font-size: 12px; font-weight: 700; font-family: inherit; background: white; cursor: pointer; outline: none; }
+    .st-sel:focus { border-color: var(--primary); }
+    .c-acts { display: flex; gap: 6px; }
+    .c-btn { padding: 6px 12px; border-radius: 7px; font-size: 12px; font-weight: 700; border: 1.5px solid var(--border); background: white; cursor: pointer; font-family: inherit; text-decoration: none; color: var(--text); transition: all .15s; display: inline-flex; align-items: center; gap: 4px; }
+    .c-btn:hover { background: var(--bg); }
+    .c-btn.del:hover { background: #FFEBEE; border-color: #FFCDD2; color: #C62828; }
+    .empty { text-align: center; padding: 80px 20px; color: var(--sub); }
+    .empty-icon { font-size: 56px; margin-bottom: 16px; }
+    .empty h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+
+    /* 삭제 모달 */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 9000; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: white; border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 12px; color: #C62828; }
+    .modal-desc  { font-size: 14px; color: var(--sub); line-height: 1.7; margin-bottom: 24px; }
+    .modal-acts  { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-mc  { padding: 10px 22px; border-radius: 8px; border: 1.5px solid var(--border); background: white; color: var(--sub); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .btn-del { padding: 10px 22px; border-radius: 8px; border: none; background: #C62828; color: white; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+    /* PW 모달 */
+    .pw-modal-box { background: white; border-radius: 16px; padding: 32px; max-width: 380px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .modal-field { margin-bottom: 14px; }
+    .modal-field label { display: block; font-size: 12px; font-weight: 700; color: var(--sub); margin-bottom: 6px; }
+    .modal-field input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 14px; font-family: inherit; outline: none; }
+    .modal-field input:focus { border-color: var(--primary); }
+    .modal-msg { font-size: 13px; margin-top: 10px; padding: 8px 12px; border-radius: 7px; display: none; }
+    .modal-msg.show { display: block; }
+    .modal-msg.ok  { background: #E8F5E9; color: #1B5E20; }
+    .modal-msg.err { background: #FFEBEE; color: #C62828; }
+    .btn-msave { padding: 9px 20px; border-radius: 8px; border: none; background: var(--primary); color: white; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+    #toast { position: fixed; bottom: 28px; right: 28px; z-index: 99999; padding: 13px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: inherit; box-shadow: 0 6px 24px rgba(0,0,0,.18); transform: translateY(80px); opacity: 0; transition: all .3s cubic-bezier(.34,1.56,.64,1); pointer-events: none; }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { background: #1B5E20; color: #fff; }
+    #toast.error   { background: #B71C1C; color: #fff; }
+    #toast.info    { background: var(--primary); color: #fff; }
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="tb-brand">
+    <img src="행정사마크.png" class="tb-brand-logo" alt="행정사마크">
+    <span class="tb-brand-text">행정사사무소 위민</span>
+  </div>
+  <span class="tb-badge">수임계약 목록</span>
+  <div class="tb-actions" style="margin-left:auto;">
+    <a href="contract-new.html" class="tb-btn tb-new">+ 새 계약 등록</a>
+    <button class="tb-btn tb-out" onclick="WeiminContracts.logout();location.href='index.html'">로그아웃</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-section">수임 관리</div>
+    <a class="nav-item" href="contract-new.html"><span class="icon">✏️</span><span class="label">계약 등록</span></a>
+    <a class="nav-item active" href="contracts.html"><span class="icon">📂</span><span class="label">계약 목록</span></a>
+    <a class="nav-item" href="calendar.html"><span class="icon">📅</span><span class="label">업무 캘린더</span></a>
+    <div class="sidebar-bottom">
+      <button class="btn-pw" onclick="document.getElementById('pwModal').classList.add('show')">🔐 비밀번호 변경</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="page-hd">
+      <div class="page-hd-left">
+        <div class="page-hd-icon">📂</div>
+        <div><h2>수임계약 목록</h2><p>전체 수임계약을 조회하고 진행 상태를 관리합니다</p></div>
+      </div>
+      <a href="contract-new.html" class="btn-new">✏️ 새 계약 등록</a>
+    </div>
+
+    <div class="drive-banner off" id="driveBanner">
+      <span id="driveMsg">💾 D드라이브 미연결</span>
+      <button class="btn-link do" id="btnConnect" onclick="connectDrive()">📁 폴더 연결</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat" onclick="setFilter('status','')">           <div class="stat-label">전체</div><div class="stat-val" id="cnt-all">0</div></div>
+      <div class="stat" onclick="setFilter('status','접수')">       <div class="stat-label">접수</div><div class="stat-val" id="cnt-접수">0</div></div>
+      <div class="stat" onclick="setFilter('status','진행중')">     <div class="stat-label">진행중</div><div class="stat-val" id="cnt-진행중">0</div></div>
+      <div class="stat red"  onclick="filterExpiry('critical')">    <div class="stat-label">만기 D-7 이내</div><div class="stat-val" id="cnt-exp">0</div></div>
+      <div class="stat warn" onclick="filterExpiry('warn')">        <div class="stat-label">만기 D-14 이내</div><div class="stat-val" id="cnt-soon">0</div></div>
+    </div>
+
+    <div class="filter">
+      <input type="text" id="q" placeholder="🔍 의뢰인명, 업무명 검색" oninput="render()">
+      <select id="fStatus" onchange="render()">
+        <option value="">상태 전체</option>
+        <option>접수</option><option>진행중</option><option>완료</option><option>보류</option>
+      </select>
+      <select id="fBiz" onchange="render()">
+        <option value="">분야 전체</option>
+        <option>인허가</option><option>인증</option><option>출입국</option>
+        <option>조달</option><option>행정심판</option><option>사실조사</option><option>기타</option>
+      </select>
+      <select id="fSort" onchange="render()">
+        <option value="recent">최신 등록순</option>
+        <option value="expiry">만기일 임박순</option>
+        <option value="name">의뢰인명순</option>
+      </select>
+      <button class="btn-reset" onclick="resetFilter()">✕ 초기화</button>
+    </div>
+
+    <div id="list"></div>
+  </div>
+</div>
+
+<!-- 삭제 모달 -->
+<div class="modal-overlay" id="delModal">
+  <div class="modal-box">
+    <div class="modal-title">🗑 계약 삭제</div>
+    <div class="modal-desc" id="delDesc">이 수임계약을 삭제하시겠습니까?<br>삭제된 데이터는 복구할 수 없습니다.</div>
+    <div class="modal-acts">
+      <button class="btn-mc" onclick="document.getElementById('delModal').classList.remove('show')">취소</button>
+      <button class="btn-del" onclick="confirmDel()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- 비밀번호 변경 모달 -->
+<div class="modal-overlay" id="pwModal">
+  <div class="pw-modal-box">
+    <div class="modal-title" style="font-size:17px;font-weight:800;color:var(--primary);margin-bottom:20px;">🔐 비밀번호 변경</div>
+    <div class="modal-field"><label>현재 비밀번호</label><input type="password" id="pwCur"></div>
+    <div class="modal-field"><label>새 비밀번호 (6자 이상)</label><input type="password" id="pwNew"></div>
+    <div class="modal-field"><label>새 비밀번호 확인</label><input type="password" id="pwCfm"></div>
+    <div class="modal-msg" id="pwMsg"></div>
+    <div class="modal-acts">
+      <button class="btn-mc" onclick="document.getElementById('pwModal').classList.remove('show')">취소</button>
+      <button class="btn-msave" onclick="doChangePw()">변경</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="js/weimin-contracts.js"></script>
+<script>
+WeiminContracts.requireAuth();
+const BIZ_ICON = { 인허가:'📋', 인증:'🏆', 출입국:'✈️', 조달:'🏛️', 행정심판:'⚖️', 사실조사:'🔍', 기타:'📌' };
+let _delId = null, _expiryFilter = null;
+
+(async () => {
+  await WeiminContracts.tryRestoreDir();
+  const connected = WeiminContracts.isConnected();
+  setDriveBanner(connected);
+  render();
+  if (!connected) setupAutoReconnect();
+})();
+
+function setupAutoReconnect() {
+  let done = false;
+  document.addEventListener('click', async function autoReconnect(e) {
+    if (done || e.target.id === 'btnConnect') return;
+    done = true;
+    document.removeEventListener('click', autoReconnect);
+    const ok = await WeiminContracts.requestDirPermission();
+    if (ok) { setDriveBanner(true); toast('D드라이브 자동 연결 완료!', 'success'); }
+  });
+}
+
+function setDriveBanner(ok) {
+  const b=document.getElementById('driveBanner'),m=document.getElementById('driveMsg'),btn=document.getElementById('btnConnect');
+  if(ok){
+    b.className='drive-banner on';m.textContent='✅ OneDrive 자동 저장 중';
+    btn.className='btn-link do';btn.textContent='📁 폴더 변경';btn.onclick=changeDrive;
+  } else {
+    b.className='drive-banner off';m.textContent='💾 아무 곳이나 클릭하면 자동 연결됩니다';
+    btn.className='btn-link do';btn.textContent='📁 폴더 연결';btn.onclick=connectDrive;
+  }
+}
+async function connectDrive(){const r=await WeiminContracts.connectFolder();if(r.ok){setDriveBanner(true);toast('폴더 연결 완료!','success');}else if(!r.cancelled)toast('연결 실패','error');}
+async function changeDrive(){await WeiminContracts.clearFolder();const r=await WeiminContracts.connectFolder();if(r.ok){setDriveBanner(true);toast('폴더 변경 완료!','success');}else if(!r.cancelled)toast('연결 실패','error');}
+
+function setFilter(k,v){_expiryFilter=null;document.getElementById(k==='status'?'fStatus':'fBiz').value=v;render();}
+function filterExpiry(l){_expiryFilter=l;document.getElementById('fStatus').value='';render();}
+function resetFilter(){_expiryFilter=null;document.getElementById('q').value='';document.getElementById('fStatus').value='';document.getElementById('fBiz').value='';document.getElementById('fSort').value='recent';render();}
+
+function ei(c) {
+  if(!c.expiryDate||c.status==='완료') return {cls:c.status==='완료'?'dn':'nn',label:c.status==='완료'?'완료':'만기일 없음',card:c.status==='완료'?'cdone':''};
+  const d=WeiminContracts.daysUntil(c.expiryDate);
+  if(d<0)  return {cls:'cl',label:`경과 ${Math.abs(d)}일`,card:'cl'};
+  if(d===0)return {cls:'cl',label:'D-Day!',card:'cl'};
+  if(d<=7) return {cls:'cl',label:`D-${d}`,card:'cl'};
+  if(d<=14)return {cls:'cw',label:`D-${d}`,card:'cw'};
+  if(d<=30)return {cls:'cca',label:`D-${d}`,card:'cca'};
+  return {cls:'cok',label:`D-${d}`,card:'cok'};
+}
+
+function render() {
+  let all=WeiminContracts.getAll();
+  const q=document.getElementById('q').value.toLowerCase();
+  const fs=document.getElementById('fStatus').value;
+  const fb=document.getElementById('fBiz').value;
+  const so=document.getElementById('fSort').value;
+  document.getElementById('cnt-all').textContent=all.length;
+  document.getElementById('cnt-접수').textContent=all.filter(c=>c.status==='접수').length;
+  document.getElementById('cnt-진행중').textContent=all.filter(c=>c.status==='진행중').length;
+  const ac=all.filter(c=>c.status!=='완료'&&c.expiryDate);
+  document.getElementById('cnt-exp').textContent=ac.filter(c=>{const d=WeiminContracts.daysUntil(c.expiryDate);return d>=0&&d<=7;}).length;
+  document.getElementById('cnt-soon').textContent=ac.filter(c=>{const d=WeiminContracts.daysUntil(c.expiryDate);return d>=0&&d<=14;}).length;
+  if(q) all=all.filter(c=>(c.clientName||'').toLowerCase().includes(q)||(c.bizDetail||'').toLowerCase().includes(q));
+  if(fs) all=all.filter(c=>c.status===fs);
+  if(fb) all=all.filter(c=>c.bizType===fb);
+  if(_expiryFilter==='critical') all=all.filter(c=>{if(!c.expiryDate||c.status==='완료')return false;const d=WeiminContracts.daysUntil(c.expiryDate);return d>=0&&d<=7;});
+  else if(_expiryFilter==='warn') all=all.filter(c=>{if(!c.expiryDate||c.status==='완료')return false;const d=WeiminContracts.daysUntil(c.expiryDate);return d>=0&&d<=14;});
+  if(so==='expiry') all.sort((a,b)=>{if(!a.expiryDate)return 1;if(!b.expiryDate)return -1;return new Date(a.expiryDate)-new Date(b.expiryDate);});
+  else if(so==='name') all.sort((a,b)=>(a.clientName||'').localeCompare(b.clientName||''));
+  const el=document.getElementById('list');
+  if(!all.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><h3>수임계약이 없습니다</h3><p>새 계약을 등록하면 여기에 표시됩니다</p></div>`;return;}
+  el.innerHTML=all.map(c=>{
+    const e=ei(c);
+    return `<div class="c-card ${e.card}">
+      <div class="c-ico"><div class="c-ico-em">${BIZ_ICON[c.bizType]||'📌'}</div><div class="c-ico-lb">${c.bizType||'기타'}</div></div>
+      <div class="c-mid">
+        <div class="c-top">
+          <span class="c-name">${esc(c.clientName)}</span>
+          ${c.bizDetail?`<span class="c-detail">${esc(c.bizDetail)}</span>`:''}
+          <span class="badge ${e.cls}">${e.label}</span>
+        </div>
+        <div class="c-meta">
+          ${c.contractDate?`<span>📅 계약 ${c.contractDate}</span>`:''}
+          ${c.expiryDate?`<span>⏰ 만기 ${c.expiryDate}</span>`:''}
+          ${c.clientPhone?`<span>📞 ${esc(c.clientPhone)}</span>`:''}
+          <span>💰 ${c.fee?(+c.fee).toLocaleString()+'원':'—'}</span>
+          ${c.manager?`<span>👤 ${esc(c.manager)}</span>`:''}
+        </div>
+        ${c.memo?`<div class="c-memo">📝 ${esc(c.memo)}</div>`:''}
+      </div>
+      <div class="c-right">
+        <select class="st-sel" onchange="quickSt('${c.id}',this.value)">
+          <option ${c.status==='접수'?'selected':''}>접수</option>
+          <option ${c.status==='진행중'?'selected':''}>진행중</option>
+          <option ${c.status==='완료'?'selected':''}>완료</option>
+          <option ${c.status==='보류'?'selected':''}>보류</option>
+        </select>
+        <div class="c-acts">
+          <a class="c-btn" href="contract-new.html?edit=${c.id}">✏️ 수정</a>
+          <button class="c-btn del" onclick="askDel('${c.id}','${esc(c.clientName)}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function quickSt(id,status){await WeiminContracts.update(id,{status});toast(`"${status}"로 변경되었습니다`,'info');render();}
+function askDel(id,name){_delId=id;document.getElementById('delDesc').innerHTML=`<strong>${name}</strong> 계약을 삭제하시겠습니까?<br>삭제된 데이터는 복구할 수 없습니다.`;document.getElementById('delModal').classList.add('show');}
+async function confirmDel(){if(!_delId)return;await WeiminContracts.remove(_delId);_delId=null;document.getElementById('delModal').classList.remove('show');toast('삭제되었습니다','info');render();}
+
+function doChangePw(){
+  const cur=document.getElementById('pwCur').value,nw=document.getElementById('pwNew').value,cfm=document.getElementById('pwCfm').value;
+  const msg=document.getElementById('pwMsg');
+  const show=(t,ok)=>{msg.textContent=t;msg.className='modal-msg show '+(ok?'ok':'err');};
+  const stored=localStorage.getItem('wms_pw')||'12345';
+  if(!cur){show('현재 비밀번호를 입력해주세요',false);return;}
+  if(cur!==stored){show('현재 비밀번호가 올바르지 않습니다',false);return;}
+  if(nw.length<6){show('새 비밀번호는 6자 이상이어야 합니다',false);return;}
+  if(nw!==cfm){show('새 비밀번호가 일치하지 않습니다',false);return;}
+  WeiminContracts.changePw(nw);show('비밀번호가 변경되었습니다',true);
+  setTimeout(()=>{document.getElementById('pwModal').classList.remove('show');['pwCur','pwNew','pwCfm'].forEach(id=>document.getElementById(id).value='');},1500);
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+let _tt;
+function toast(msg,type='success'){const el=document.getElementById('toast');el.textContent=(type==='success'?'✅ ':type==='error'?'❌ ':'ℹ️ ')+msg;el.className='show '+type;clearTimeout(_tt);_tt=setTimeout(()=>{el.className='';},3200);}
+</script>
+</body>
+</html>

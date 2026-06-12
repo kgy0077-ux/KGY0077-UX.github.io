@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>업무 캘린더 — 위민 수임관리시스템</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sidebar-w: 220px; --topbar-h: 58px;
+      --primary: #1B4F8A; --accent: #E65100;
+      --bg: #F0F4F8; --border: #DDE3EC;
+      --text: #1a2230; --sub: #5a6a7e;
+      --card: #ffffff; --sh: 0 2px 12px rgba(0,0,0,.07);
+    }
+    body { font-family: 'Malgun Gothic','맑은 고딕',sans-serif; background: var(--bg); color: var(--text); }
+
+    .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: var(--topbar-h); background: #070f1a; display: flex; align-items: center; padding: 0 24px; box-shadow: 0 2px 12px rgba(0,0,0,.4); }
+    .tb-brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+    .tb-brand-logo { height: 36px; width: auto; object-fit: contain; filter: brightness(1.1); }
+    .tb-brand-text { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: 2px; white-space: nowrap; }
+    .tb-brand-sub  { display: none; }
+    .tb-brand-main { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: 2px; }
+    .tb-badge { background: rgba(230,81,0,.2); color: #FF8A50; border: 1px solid rgba(230,81,0,.3); font-size: 11px; padding: 3px 12px; border-radius: 50px; margin-left: 12px; letter-spacing: 1px; }
+    .tb-actions { display: flex; gap: 10px; }
+    .tb-btn { padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; border: none; font-family: inherit; transition: all .2s; }
+    .tb-new   { background: var(--accent); color: #fff; }
+    .tb-new:hover { background: #BF360C; }
+    .tb-ghost { background: rgba(255,255,255,.1); color: #ccd; }
+    .tb-ghost:hover { background: rgba(255,255,255,.2); color: #fff; }
+    .tb-out   { background: rgba(200,60,60,.2); color: #f99; }
+    .tb-out:hover { background: rgba(200,60,60,.35); }
+
+    .layout { display: flex; margin-top: var(--topbar-h); min-height: calc(100vh - var(--topbar-h)); }
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: #0D2B4E; position: fixed; top: var(--topbar-h); bottom: 0; left: 0; overflow-y: auto; display: flex; flex-direction: column; }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+    .nav-section { font-size: 10px; color: rgba(255,255,255,.25); letter-spacing: 2px; padding: 20px 18px 6px; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 13px 18px; font-size: 14px; color: #8899aa; transition: all .18s; border-left: 3px solid transparent; text-decoration: none; }
+    .nav-item:hover { background: rgba(255,255,255,.05); color: #ccd; }
+    .nav-item.active { background: rgba(255,255,255,.09); color: #fff; border-left-color: var(--accent); }
+    .nav-item .icon { font-size: 18px; flex-shrink: 0; }
+    .nav-item .label { font-weight: 600; }
+    .sidebar-bottom { margin-top: auto; padding: 16px; }
+    .btn-pw { width: 100%; padding: 10px; background: rgba(255,255,255,.06); color: #8899aa; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; margin-bottom: 8px; }
+    .btn-pw:hover { background: rgba(255,255,255,.12); color: #ccd; }
+
+    .main { margin-left: var(--sidebar-w); flex: 1; padding: 24px 28px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* BANNERS */
+    .drive-banner { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; border-radius: 9px; font-size: 12px; }
+    .drive-banner.on  { background: #E8F5E9; border: 1px solid #A5D6A7; color: #1B5E20; }
+    .drive-banner.off { background: #FFF8E1; border: 1px solid #FFD54F; color: #E65100; }
+    .btn-link { padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; }
+    .btn-link.do   { background: var(--accent); color: #fff; }
+    .btn-link.done { background: #2E7D32; color: #fff; cursor: default; }
+    .notify-banner { border-radius: 10px; padding: 11px 18px; font-size: 13px; display: none; }
+    .notify-banner.show { display: block; }
+    .notify-banner.sent    { background: #E8F5E9; border: 1px solid #A5D6A7; color: #1B5E20; }
+    .notify-banner.partial { background: #FFF8E1; border: 1px solid #FFD54F; color: #E65100; }
+
+    /* CAL + ALERT PANEL */
+    .body-row { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+    @media (max-width: 1100px) { .body-row { grid-template-columns: 1fr; } }
+
+    /* CALENDAR */
+    .cal-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--sh); overflow: hidden; }
+    .cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--border); }
+    .cal-title { font-size: 20px; font-weight: 900; color: var(--primary); }
+    .cal-nav-btns { display: flex; gap: 8px; align-items: center; }
+    .cal-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid var(--border); background: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .18s; }
+    .cal-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn-today { padding: 6px 16px; border-radius: 8px; border: 1.5px solid var(--primary); background: white; color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .18s; }
+    .btn-today:hover { background: var(--primary); color: white; }
+    .cal-dow-row { display: grid; grid-template-columns: repeat(7,1fr); background: #F8FAFC; border-bottom: 1px solid var(--border); }
+    .cal-dow { text-align: center; padding: 10px 0; font-size: 12px; font-weight: 700; color: var(--sub); }
+    .cal-dow:first-child { color: #C62828; }
+    .cal-dow:last-child  { color: #1565C0; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); }
+    .cal-cell { min-height: 96px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 6px; transition: background .15s; }
+    .cal-cell:nth-child(7n) { border-right: none; }
+    .cal-cell:hover { background: #F8FAFC; }
+    .cal-cell.other  { background: #FAFBFC; }
+    .cal-cell.other .cell-day { color: #C8D0D8; }
+    .cal-cell.today  { background: #EEF4FF; }
+    .cal-cell.today .cell-day { background: var(--primary); color: white; }
+    .cal-cell.sun .cell-day  { color: #C62828; }
+    .cal-cell.sat .cell-day  { color: #1565C0; }
+    .cell-day { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .chip { display: block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-bottom: 2px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; transition: opacity .15s; }
+    .chip:hover { opacity: .8; }
+    .ch-ct { background: #E3F2FD; color: #1565C0; }
+    .ch-ok { background: #E8F5E9; color: #2E7D32; }
+    .ch-ca { background: #FFFDE7; color: #F57F17; }
+    .ch-wn { background: #FFF3E0; color: #E65100; }
+    .ch-cr { background: #FFEBEE; color: #C62828; }
+    .ch-dd { background: #C62828; color: #fff; }
+    .chip-more { background: var(--border); color: var(--sub); font-size: 10px; padding: 1px 5px; border-radius: 3px; cursor: pointer; }
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; padding: 12px 20px; border-top: 1px solid var(--border); background: #F8FAFC; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--sub); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ALERT PANEL */
+    .alert-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--sh); overflow: hidden; }
+    .alert-hd { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .alert-hd h3 { font-size: 14px; font-weight: 800; color: var(--primary); }
+    .alert-count { background: #FFEBEE; color: #C62828; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 50px; }
+    .alert-list { max-height: 440px; overflow-y: auto; }
+    .alert-list::-webkit-scrollbar { width: 4px; }
+    .alert-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .alert-item { padding: 12px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; }
+    .alert-item:last-child { border-bottom: none; }
+    .alert-item:hover { background: #F8FAFC; }
+    .alert-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+    .alert-name { font-size: 13px; font-weight: 700; }
+    .al-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 50px; }
+    .al-badge.d0  { background: #C62828; color: #fff; }
+    .al-badge.d7  { background: #FFEBEE; color: #C62828; }
+    .al-badge.d14 { background: #FFF3E0; color: #E65100; }
+    .al-badge.dX  { background: #FFFDE7; color: #F57F17; }
+    .alert-meta { font-size: 11px; color: var(--sub); }
+    .alert-empty { padding: 32px; text-align: center; color: var(--sub); font-size: 13px; }
+
+    /* MODALS */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 9000; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: white; border-radius: 18px; padding: 32px; width: 90%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,.3); }
+    .modal-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .modal-title { font-size: 18px; font-weight: 800; color: var(--primary); }
+    .modal-close { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--border); background: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .msec { margin-bottom: 22px; }
+    .msec-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #EEF4FF; }
+    .mfield { margin-bottom: 12px; }
+    .mfield label { display: block; font-size: 12px; font-weight: 700; color: var(--sub); margin-bottom: 5px; }
+    .mfield input { width: 100%; padding: 10px 13px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; }
+    .mfield input:focus { border-color: var(--primary); }
+    .mfield .hint { font-size: 11px; color: var(--sub); margin-top: 4px; }
+    .mtoggle { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .mtoggle input[type="checkbox"] { width: 17px; height: 17px; cursor: pointer; accent-color: var(--primary); }
+    .mtoggle label { font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-save-set { width: 100%; padding: 13px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 800; font-family: inherit; cursor: pointer; transition: all .2s; }
+    .btn-save-set:hover { background: #BF360C; }
+    .kakao-row { display: flex; gap: 10px; align-items: center; }
+    .btn-kakao { flex: 1; padding: 10px; background: #FEE500; color: #000; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-kakao:hover { background: #F0D800; }
+    .kakao-st { font-size: 12px; color: var(--sub); }
+    .kakao-st.ok { color: #2E7D32; font-weight: 700; }
+
+    /* EVENT MODAL */
+    .ev-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 9001; align-items: center; justify-content: center; }
+    .ev-modal.show { display: flex; }
+    .ev-box { background: white; border-radius: 16px; padding: 28px; width: 90%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .ev-title { font-size: 16px; font-weight: 800; margin-bottom: 16px; color: var(--primary); display: flex; justify-content: space-between; align-items: center; }
+    .ev-row { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .ev-row:last-of-type { border-bottom: none; }
+    .ev-lbl { width: 80px; flex-shrink: 0; font-weight: 700; color: var(--sub); }
+    .ev-val { color: var(--text); flex: 1; }
+    .ev-acts { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+    .ev-btn { padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+    .ev-edit  { background: var(--primary); color: #fff; border: none; }
+    .ev-close { background: white; color: var(--sub); border: 1.5px solid var(--border); }
+
+    /* PW MODAL */
+    .pw-box { background: white; border-radius: 16px; padding: 32px; max-width: 380px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .pw-title { font-size: 17px; font-weight: 800; color: var(--primary); margin-bottom: 20px; }
+    .pw-field { margin-bottom: 12px; }
+    .pw-field label { display: block; font-size: 12px; font-weight: 700; color: var(--sub); margin-bottom: 5px; }
+    .pw-field input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 14px; font-family: inherit; outline: none; }
+    .pw-msg { font-size: 13px; margin-top: 10px; padding: 8px 12px; border-radius: 7px; display: none; }
+    .pw-msg.show { display: block; }
+    .pw-msg.ok  { background: #E8F5E9; color: #1B5E20; }
+    .pw-msg.err { background: #FFEBEE; color: #C62828; }
+    .modal-acts { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+    .btn-mc   { padding: 9px 20px; border-radius: 8px; border: 1.5px solid var(--border); background: white; color: var(--sub); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .btn-msave{ padding: 9px 20px; border-radius: 8px; border: none; background: var(--primary); color: white; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+    #toast { position: fixed; bottom: 28px; right: 28px; z-index: 99999; padding: 13px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: inherit; box-shadow: 0 6px 24px rgba(0,0,0,.18); transform: translateY(80px); opacity: 0; transition: all .3s cubic-bezier(.34,1.56,.64,1); pointer-events: none; }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { background: #1B5E20; color: #fff; }
+    #toast.error   { background: #B71C1C; color: #fff; }
+    #toast.info    { background: var(--primary); color: #fff; }
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="tb-brand">
+    <img src="행정사마크.png" class="tb-brand-logo" alt="행정사마크">
+    <span class="tb-brand-text">행정사사무소 위민</span>
+  </div>
+  <span class="tb-badge">업무 캘린더</span>
+  <div class="tb-actions" style="margin-left:auto;">
+    <a href="contract-new.html" class="tb-btn tb-new">+ 계약 등록</a>
+    <button class="tb-btn tb-ghost" onclick="openSettings()">⚙️ 알림 설정</button>
+    <button class="tb-btn tb-out" onclick="WeiminContracts.logout();location.href='index.html'">로그아웃</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-section">수임 관리</div>
+    <a class="nav-item" href="contract-new.html"><span class="icon">✏️</span><span class="label">계약 등록</span></a>
+    <a class="nav-item" href="contracts.html"><span class="icon">📂</span><span class="label">계약 목록</span></a>
+    <a class="nav-item active" href="calendar.html"><span class="icon">📅</span><span class="label">업무 캘린더</span></a>
+    <div class="sidebar-bottom">
+      <button class="btn-pw" onclick="openSettings()">⚙️ 알림 설정</button>
+      <button class="btn-pw" onclick="document.getElementById('pwModal').classList.add('show')">🔐 비밀번호 변경</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="drive-banner off" id="driveBanner">
+      <span id="driveMsg">💾 D드라이브 미연결</span>
+      <button class="btn-link do" id="btnConnect" onclick="connectDrive()">📁 폴더 연결</button>
+    </div>
+    <div class="notify-banner" id="notifyBanner"></div>
+
+    <div class="body-row">
+      <!-- 캘린더 -->
+      <div class="cal-card">
+        <div class="cal-nav">
+          <button class="cal-btn" onclick="moveMonth(-1)">&#8249;</button>
+          <div class="cal-title" id="calTitle"></div>
+          <div class="cal-nav-btns">
+            <button class="btn-today" onclick="goToday()">오늘</button>
+            <button class="cal-btn" onclick="moveMonth(1)">&#8250;</button>
+          </div>
+        </div>
+        <div class="cal-dow-row">
+          <div class="cal-dow">일</div><div class="cal-dow">월</div><div class="cal-dow">화</div>
+          <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div><div class="cal-dow">토</div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#BBDEFB"></div>계약일</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#C8E6C9"></div>만기(여유)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FFF9C4"></div>D-30</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FFCCBC"></div>D-14</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FFCDD2"></div>D-7 이내</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#C62828;border-radius:50%"></div>D-Day</div>
+        </div>
+      </div>
+
+      <!-- 알림 패널 -->
+      <div class="alert-panel">
+        <div class="alert-hd">
+          <h3>⏰ 만기 임박 목록</h3>
+          <span class="alert-count" id="alertCount">0</span>
+        </div>
+        <div class="alert-list" id="alertList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 설정 모달 -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <div class="modal-title">⚙️ 알림 설정</div>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="msec">
+      <div class="msec-title">📧 이메일 알림 (EmailJS)</div>
+      <div class="mtoggle"><input type="checkbox" id="emailEnabled"><label for="emailEnabled">이메일 알림 활성화</label></div>
+      <div class="mfield"><label>받는 이메일 주소</label><input type="email" id="emailTo" placeholder="kgy0077@gmail.com"></div>
+      <div class="mfield"><label>EmailJS Public Key</label><input type="text" id="ejsPK" placeholder="NZGYjcjSza6E08p1L"><div class="hint">💡 emailjs.com → 계정 → API Keys → 공개키</div></div>
+      <div class="mfield"><label>EmailJS Service ID</label><input type="text" id="ejsSvc" placeholder="service_ykvbvr7"><div class="hint">💡 emailjs.com → 이메일 서비스에서 확인</div></div>
+      <div class="mfield"><label>EmailJS Template ID</label><input type="text" id="ejsTpl" placeholder="template_uari60n"><div class="hint">💡 emailjs.com → 이메일 템플릿에서 확인</div></div>
+    </div>
+    <div class="msec">
+      <div class="msec-title">💬 카카오톡 알림 (나에게 보내기)</div>
+      <div class="mtoggle"><input type="checkbox" id="kakaoEnabled"><label for="kakaoEnabled">카카오톡 알림 활성화</label></div>
+      <div class="mfield"><label>카카오 JavaScript 앱 키</label><input type="text" id="kakaoKey" placeholder="카카오 개발자 콘솔 → 앱 키 → JavaScript 키"><div class="hint">💡 developers.kakao.com → 내 애플리케이션 → 앱 키</div></div>
+      <div class="kakao-row">
+        <button class="btn-kakao" onclick="kakaoLogin()">🔑 카카오 로그인 (연결)</button>
+        <span class="kakao-st" id="kakaoSt">미연결</span>
+      </div>
+    </div>
+    <button class="btn-save-set" onclick="saveSettings()">💾 설정 저장</button>
+  </div>
+</div>
+
+<!-- 이벤트 상세 모달 -->
+<div class="ev-modal" id="evModal">
+  <div class="ev-box">
+    <div class="ev-title"><span id="evTitle">상세 정보</span><button class="modal-close" onclick="document.getElementById('evModal').classList.remove('show')">✕</button></div>
+    <div id="evBody"></div>
+    <div class="ev-acts">
+      <button class="ev-btn ev-close" onclick="document.getElementById('evModal').classList.remove('show')">닫기</button>
+      <a class="ev-btn ev-edit" id="evEdit" href="#">✏️ 수정</a>
+    </div>
+  </div>
+</div>
+
+<!-- 비밀번호 변경 모달 -->
+<div class="modal-overlay" id="pwModal">
+  <div class="pw-box">
+    <div class="pw-title">🔐 비밀번호 변경</div>
+    <div class="pw-field"><label>현재 비밀번호</label><input type="password" id="pwCur"></div>
+    <div class="pw-field"><label>새 비밀번호 (6자 이상)</label><input type="password" id="pwNew"></div>
+    <div class="pw-field"><label>새 비밀번호 확인</label><input type="password" id="pwCfm"></div>
+    <div class="pw-msg" id="pwMsg"></div>
+    <div class="modal-acts">
+      <button class="btn-mc" onclick="document.getElementById('pwModal').classList.remove('show')">취소</button>
+      <button class="btn-msave" onclick="doChangePw()">변경</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+<script src="js/weimin-contracts.js"></script>
+<script>
+WeiminContracts.requireAuth();
+const BIZ_ICON = { 인허가:'📋', 인증:'🏆', 출입국:'✈️', 조달:'🏛️', 행정심판:'⚖️', 사실조사:'🔍', 기타:'📌' };
+let _Y, _M;
+
+(async () => {
+  const now = new Date(); _Y = now.getFullYear(); _M = now.getMonth();
+  await WeiminContracts.tryRestoreDir();
+  const connected = WeiminContracts.isConnected();
+  setDriveBanner(connected);
+  renderCal(); renderAlerts(); loadSettingsUI(); restoreKakao();
+  await runAlerts();
+  if (!connected) setupAutoReconnect();
+})();
+
+function setupAutoReconnect() {
+  let done = false;
+  document.addEventListener('click', async function autoReconnect(e) {
+    if (done || e.target.id === 'btnConnect') return;
+    done = true;
+    document.removeEventListener('click', autoReconnect);
+    const ok = await WeiminContracts.requestDirPermission();
+    if (ok) { setDriveBanner(true); renderCal(); renderAlerts(); toast('D드라이브 자동 연결 완료!', 'success'); }
+  });
+}
+
+function setDriveBanner(ok) {
+  const b=document.getElementById('driveBanner'),m=document.getElementById('driveMsg'),btn=document.getElementById('btnConnect');
+  if(ok){
+    b.className='drive-banner on';
+    m.textContent='✅ OneDrive 자동 저장 중';
+    btn.className='btn-link do';btn.textContent='📁 폴더 변경';btn.onclick=changeDrive;
+  } else {
+    b.className='drive-banner off';m.textContent='💾 아무 곳이나 클릭하면 자동 연결됩니다';
+    btn.className='btn-link do';btn.textContent='📁 폴더 연결';btn.onclick=connectDrive;
+  }
+}
+async function connectDrive(){const r=await WeiminContracts.connectFolder();if(r.ok){setDriveBanner(true);toast('폴더 연결 완료!','success');renderCal();renderAlerts();}else if(!r.cancelled)toast('연결 실패','error');}
+async function changeDrive(){await WeiminContracts.clearFolder();const r=await WeiminContracts.connectFolder();if(r.ok){setDriveBanner(true);toast('폴더 변경 완료!','success');renderCal();renderAlerts();}else if(!r.cancelled)toast('연결 실패','error');}
+
+/* ── 캘린더 ── */
+function renderCal() {
+  document.getElementById('calTitle').textContent = `${_Y}년 ${_M+1}월`;
+  const contracts = WeiminContracts.getAll();
+  const evMap = {};
+  for (const c of contracts) {
+    if (c.contractDate) (evMap[c.contractDate]=evMap[c.contractDate]||[]).push({type:'ct',c});
+    if (c.expiryDate && c.status!=='완료') (evMap[c.expiryDate]=evMap[c.expiryDate]||[]).push({type:'ex',c});
+  }
+  const _tn = new Date();
+  const todayStr = `${_tn.getFullYear()}-${String(_tn.getMonth()+1).padStart(2,'0')}-${String(_tn.getDate()).padStart(2,'0')}`;
+  const startDow = new Date(_Y,_M,1).getDay();
+  let html='', d=1-startDow;
+  for(let r=0;r<6;r++){
+    let rowHtml='', hasThis=false;
+    for(let col=0;col<7;col++){
+      const dt=new Date(_Y,_M,d);
+      const ds=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+      const isCur=(dt.getMonth()===_M&&dt.getFullYear()===_Y);
+      if(isCur)hasThis=true;
+      const cls=['cal-cell',!isCur?'other':'',ds===todayStr?'today':'',col===0?'sun':'',col===6?'sat':''].filter(Boolean).join(' ');
+      const evs=evMap[ds]||[];
+      const MAX=3;
+      let ec='';
+      evs.slice(0,MAX).forEach(ev=>{
+        const cc=ev.type==='ct'?'ch-ct':chipCls(ev.c);
+        ec+=`<span class="chip ${cc}" onclick="openEv('${ev.c.id}')" title="${esc(ev.c.clientName)}">${BIZ_ICON[ev.c.bizType]||''} ${esc(ev.c.clientName)}</span>`;
+      });
+      if(evs.length>MAX) ec+=`<span class="chip-more">+${evs.length-MAX}건</span>`;
+      rowHtml+=`<div class="${cls}"><div class="cell-day">${dt.getDate()}</div>${ec}</div>`;
+      d++;
+    }
+    if(r<4||hasThis) html+=rowHtml;
+  }
+  document.getElementById('calGrid').innerHTML=html;
+}
+function chipCls(c){
+  const d=WeiminContracts.daysUntil(c.expiryDate);
+  if(d===0)return'ch-dd'; if(d<=7)return'ch-cr'; if(d<=14)return'ch-wn'; if(d<=30)return'ch-ca'; return'ch-ok';
+}
+function moveMonth(delta){_M+=delta;if(_M>11){_M=0;_Y++;}if(_M<0){_M=11;_Y--;}renderCal();}
+function goToday(){const n=new Date();_Y=n.getFullYear();_M=n.getMonth();renderCal();}
+
+/* ── 만기 임박 패널 ── */
+function renderAlerts() {
+  const all=WeiminContracts.getAll().filter(c=>c.expiryDate&&c.status!=='완료')
+    .map(c=>({c,d:WeiminContracts.daysUntil(c.expiryDate)})).filter(x=>x.d<=30).sort((a,b)=>a.d-b.d);
+  document.getElementById('alertCount').textContent=all.filter(x=>x.d<=14&&x.d>=0).length;
+  if(!all.length){document.getElementById('alertList').innerHTML='<div class="alert-empty">⭕ 30일 이내 만기 건이 없습니다</div>';return;}
+  document.getElementById('alertList').innerHTML=all.map(({c,d})=>{
+    let badge='',bcls='';
+    if(d<0){badge=`경과 ${Math.abs(d)}일`;bcls='d0';}
+    else if(d===0){badge='D-Day!';bcls='d0';}
+    else if(d<=7){badge=`D-${d}`;bcls='d7';}
+    else if(d<=14){badge=`D-${d}`;bcls='d14';}
+    else{badge=`D-${d}`;bcls='dX';}
+    return `<div class="alert-item" onclick="openEv('${c.id}')">
+      <div class="alert-top"><span class="alert-name">${esc(c.clientName)} <span style="font-weight:400;color:var(--sub)">${c.bizType||''}</span></span><span class="al-badge ${bcls}">${badge}</span></div>
+      <div class="alert-meta">만기일: ${c.expiryDate}${c.bizDetail?' · '+c.bizDetail:''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── 이벤트 상세 ── */
+function openEv(id) {
+  const c=WeiminContracts.getById(id); if(!c)return;
+  const d=c.expiryDate?WeiminContracts.daysUntil(c.expiryDate):null;
+  const ds=d!==null?(d===0?'D-Day!':d>0?`D-${d}`:`경과 ${Math.abs(d)}일`):'—';
+  document.getElementById('evTitle').textContent=(BIZ_ICON[c.bizType]||'📌')+' '+c.clientName;
+  document.getElementById('evBody').innerHTML=`
+    <div class="ev-row"><span class="ev-lbl">업무 분야</span><span class="ev-val">${esc(c.bizType)}${c.bizDetail?' · '+esc(c.bizDetail):''}</span></div>
+    <div class="ev-row"><span class="ev-lbl">진행 상태</span><span class="ev-val">${esc(c.status)}</span></div>
+    <div class="ev-row"><span class="ev-lbl">계약일</span><span class="ev-val">${c.contractDate||'—'}</span></div>
+    <div class="ev-row"><span class="ev-lbl">만기일</span><span class="ev-val">${c.expiryDate||'—'} <strong style="color:#C62828">${c.expiryDate?ds:''}</strong></span></div>
+    <div class="ev-row"><span class="ev-lbl">연락처</span><span class="ev-val">${esc(c.clientPhone||'—')}</span></div>
+    <div class="ev-row"><span class="ev-lbl">수임료</span><span class="ev-val">${c.fee?(+c.fee).toLocaleString()+'원':'—'}</span></div>
+    ${c.memo?`<div class="ev-row"><span class="ev-lbl">메모</span><span class="ev-val">${esc(c.memo)}</span></div>`:''}
+  `;
+  document.getElementById('evEdit').href=`contract-new.html?edit=${c.id}`;
+  document.getElementById('evModal').classList.add('show');
+}
+
+/* ── 알림 발송 ── */
+async function runAlerts() {
+  const pending=WeiminContracts.getPendingAlerts(); if(!pending.length)return;
+  const s=WeiminContracts.getSettings();
+  let sent=0,fail=0;
+  for(const {contract:c,days,key} of pending){
+    let ok=true;
+    if(s.emailEnabled&&s.ejsPK&&s.ejsSvc&&s.ejsTpl&&s.emailTo){
+      try{
+        await emailjs.send(s.ejsSvc,s.ejsTpl,{
+          to_email:s.emailTo,client_name:c.clientName,
+          biz_type:c.bizType+(c.bizDetail?' · '+c.bizDetail:''),
+          expiry_date:c.expiryDate,days_left:days===0?'D-Day':`D-${days}`,
+          client_phone:c.clientPhone||'',memo:c.memo||''
+        },s.ejsPK);
+      }catch(e){ok=false;fail++;}
+    }
+    if(s.kakaoEnabled&&s.kakaoKey){
+      const token=localStorage.getItem('wms_kakao_token');
+      if(token){try{await sendKakao(token,c,days===0?'D-Day':`D-${days}`);}catch(e){ok=false;fail++;}}
+    }
+    if(ok){WeiminContracts.markSent(key);sent++;}
+  }
+  showNotifyBanner(pending,sent,fail,s);
+}
+
+async function sendKakao(token,c,label){
+  const text=`[위민행정사] 만기일 알림\n\n의뢰인: ${c.clientName}\n업무: ${c.bizType}${c.bizDetail?' · '+c.bizDetail:''}\n만기일: ${c.expiryDate} (${label})\n연락처: ${c.clientPhone||'—'}`;
+  const r=await fetch('https://kapi.kakao.com/v2/api/talk/memo/default/send',{
+    method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/x-www-form-urlencoded'},
+    body:'template_object='+encodeURIComponent(JSON.stringify({object_type:'text',text,link:{web_url:'https://weimin.co.kr',mobile_web_url:'https://weimin.co.kr'}}))
+  });
+  if(!r.ok)throw new Error('Kakao '+r.status);
+}
+
+function showNotifyBanner(pending,sent,fail,s){
+  const b=document.getElementById('notifyBanner');
+  const isSet=(s.emailEnabled&&s.ejsPK)||(s.kakaoEnabled&&s.kakaoKey);
+  if(!isSet){b.className='notify-banner show partial';b.innerHTML=`⚠️ 만기 알림 대상 ${pending.length}건 — <a href="#" onclick="openSettings();return false">알림 설정</a>에서 이메일/카카오 연결 후 자동 발송됩니다.`;}
+  else if(sent>0){b.className='notify-banner show sent';b.textContent=`✅ 만기 알림 ${sent}건 발송 완료${fail?` (${fail}건 실패)`:''}`;}
+  else if(fail>0){b.className='notify-banner show partial';b.textContent=`⚠️ 알림 발송 ${fail}건 실패 — 설정을 확인해주세요`;}
+}
+
+/* ── 설정 모달 ── */
+function loadSettingsUI(){
+  const s=WeiminContracts.getSettings();
+  document.getElementById('emailEnabled').checked=!!s.emailEnabled;
+  document.getElementById('emailTo').value=s.emailTo||'';
+  document.getElementById('ejsPK').value=s.ejsPK||'';
+  document.getElementById('ejsSvc').value=s.ejsSvc||'';
+  document.getElementById('ejsTpl').value=s.ejsTpl||'';
+  document.getElementById('kakaoEnabled').checked=!!s.kakaoEnabled;
+  document.getElementById('kakaoKey').value=s.kakaoKey||'';
+}
+function saveSettings(){
+  WeiminContracts.saveSettings({
+    emailEnabled:document.getElementById('emailEnabled').checked,
+    emailTo:document.getElementById('emailTo').value.trim(),
+    ejsPK:document.getElementById('ejsPK').value.trim(),
+    ejsSvc:document.getElementById('ejsSvc').value.trim(),
+    ejsTpl:document.getElementById('ejsTpl').value.trim(),
+    kakaoEnabled:document.getElementById('kakaoEnabled').checked,
+    kakaoKey:document.getElementById('kakaoKey').value.trim(),
+  });
+  closeSettings(); toast('알림 설정이 저장되었습니다','success');
+}
+function openSettings(){loadSettingsUI();document.getElementById('settingsModal').classList.add('show');}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('show');}
+
+/* ── 카카오 ── */
+function restoreKakao(){
+  const token=localStorage.getItem('wms_kakao_token');
+  const el=document.getElementById('kakaoSt');
+  if(token){el.className='kakao-st ok';el.textContent='✅ 연결됨';}
+  else{el.className='kakao-st';el.textContent='미연결';}
+}
+function kakaoLogin(){
+  const key=document.getElementById('kakaoKey').value.trim();
+  if(!key){toast('카카오 앱 키를 먼저 입력해주세요','error');return;}
+  try{
+    if(!Kakao.isInitialized())Kakao.init(key);
+    Kakao.Auth.login({
+      success(auth){localStorage.setItem('wms_kakao_token',auth.access_token);restoreKakao();toast('카카오 로그인 성공!','success');},
+      fail(e){toast('카카오 로그인 실패: '+(e.error_description||''),'error');}
+    });
+  }catch(e){toast('카카오 SDK 오류: '+e.message,'error');}
+}
+
+/* ── 비밀번호 변경 ── */
+function doChangePw(){
+  const cur=document.getElementById('pwCur').value,nw=document.getElementById('pwNew').value,cfm=document.getElementById('pwCfm').value;
+  const msg=document.getElementById('pwMsg');
+  const show=(t,ok)=>{msg.textContent=t;msg.className='pw-msg show '+(ok?'ok':'err');};
+  const stored=localStorage.getItem('wms_pw')||'12345';
+  if(!cur){show('현재 비밀번호를 입력해주세요',false);return;}
+  if(cur!==stored){show('현재 비밀번호가 올바르지 않습니다',false);return;}
+  if(nw.length<6){show('새 비밀번호는 6자 이상이어야 합니다',false);return;}
+  if(nw!==cfm){show('새 비밀번호가 일치하지 않습니다',false);return;}
+  WeiminContracts.changePw(nw);show('비밀번호가 변경되었습니다',true);
+  setTimeout(()=>{document.getElementById('pwModal').classList.remove('show');['pwCur','pwNew','pwCfm'].forEach(id=>document.getElementById(id).value='');},1500);
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+let _tt;
+function toast(msg,type='success'){const el=document.getElementById('toast');el.textContent=(type==='success'?'✅ ':type==='error'?'❌ ':'ℹ️ ')+msg;el.className='show '+type;clearTimeout(_tt);_tt=setTimeout(()=>{el.className='';},3500);}
+</script>
+</body>
+</html>
