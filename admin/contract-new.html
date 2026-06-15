@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수임계약 등록 — 행정사사무소 위민</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sidebar-w: 220px; --topbar-h: 56px;
+      --primary: #1B4F8A; --accent: #E65100;
+      --bg: #F0F4F8; --border: #DDE3EC;
+      --text: #1a2230; --sub: #5a6a7e;
+      --card: #ffffff; --sh: 0 2px 10px rgba(0,0,0,.07);
+    }
+    body { font-family: 'Malgun Gothic','맑은 고딕',sans-serif; background: var(--bg); color: var(--text); }
+
+    /* TOPBAR */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      height: var(--topbar-h); background: #070f1a;
+      display: flex; align-items: center; padding: 0 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.4);
+    }
+    .tb-logo { display: flex; flex-direction: column; line-height: 1.1; margin-right: auto; }
+    .tb-logo-sub  { font-size: 10px; color: #6b7e96; letter-spacing: 1px; }
+    .tb-logo-main { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: 2px; }
+    .tb-badge { background: rgba(255,213,79,.15); color: #FFD54F; border: 1px solid rgba(255,213,79,.3); font-size: 11px; padding: 3px 12px; border-radius: 50px; margin-left: 12px; letter-spacing: 1px; }
+    .tb-actions { display: flex; gap: 10px; }
+    .tb-btn { padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; border: none; font-family: inherit; transition: all .2s; }
+    .tb-view   { background: rgba(255,255,255,.1); color: #ccd; }
+    .tb-view:hover { background: rgba(255,255,255,.2); color: #fff; }
+    .tb-logout { background: rgba(200,60,60,.2); color: #f99; }
+    .tb-logout:hover { background: rgba(200,60,60,.4); }
+
+    /* LAYOUT */
+    .layout { display: flex; margin-top: var(--topbar-h); min-height: calc(100vh - var(--topbar-h)); }
+
+    /* SIDEBAR */
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: #0D2B4E; position: fixed; top: var(--topbar-h); bottom: 0; left: 0; overflow-y: auto; }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+    .nav-group-label { font-size: 10px; color: rgba(255,255,255,.3); letter-spacing: 2px; padding: 18px 18px 6px; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 18px; cursor: pointer; font-size: 14px; color: #8899aa; transition: all .18s; border-left: 3px solid transparent; text-decoration: none; }
+    .nav-item:hover { background: rgba(255,255,255,.05); color: #ccd; }
+    .nav-item.active { background: rgba(255,255,255,.08); color: #fff; border-left-color: var(--accent); }
+    .nav-item .nav-icon { font-size: 18px; flex-shrink: 0; }
+    .nav-item .nav-label { font-weight: 600; }
+
+    /* MAIN */
+    .main-content { margin-left: var(--sidebar-w); flex: 1; padding: 32px; }
+    .page-wrap { max-width: 760px; }
+
+    .page-hd { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+    .page-hd-icon { font-size: 36px; }
+    .page-hd h2 { font-size: 22px; font-weight: 800; color: var(--primary); }
+    .page-hd p  { font-size: 13px; color: var(--sub); margin-top: 3px; }
+
+    /* D드라이브 상태 배너 */
+    .drive-banner { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; }
+    .drive-banner.connected    { background: #E8F5E9; border: 1px solid #A5D6A7; color: #1B5E20; }
+    .drive-banner.disconnected { background: #FFF8E1; border: 1px solid #FFD54F; color: #E65100; }
+    .btn-connect { padding: 7px 18px; border-radius: 7px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; transition: all .2s; }
+    .btn-connect.do    { background: var(--accent); color: #fff; }
+    .btn-connect.do:hover { background: #BF360C; }
+    .btn-connect.done  { background: #2E7D32; color: #fff; cursor: default; }
+
+    /* CARD */
+    .card { background: var(--card); border-radius: 14px; box-shadow: var(--sh); padding: 28px; margin-bottom: 20px; border: 1px solid var(--border); }
+    .card-title { font-size: 14px; font-weight: 800; color: var(--primary); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #EEF4FF; }
+
+    /* FORM GRID */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 13px; font-weight: 700; color: var(--text); }
+    .field-hint { font-size: 11px; color: var(--sub); }
+    .field input, .field select, .field textarea {
+      padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 9px;
+      font-size: 14px; font-family: inherit; color: var(--text); background: #FAFCFF;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,79,138,.1);
+    }
+    .field textarea { resize: vertical; min-height: 100px; line-height: 1.7; }
+
+    /* STATUS BADGE */
+    .status-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .status-opt input { display: none; }
+    .status-opt label {
+      display: inline-block; padding: 8px 18px; border-radius: 50px; cursor: pointer;
+      font-size: 13px; font-weight: 700; border: 2px solid var(--border); color: var(--sub);
+      transition: all .18s;
+    }
+    .status-opt input:checked + label { border-color: var(--primary); color: var(--primary); background: #EEF4FF; }
+    .status-opt.green  input:checked + label { border-color: #2E7D32; color: #2E7D32; background: #E8F5E9; }
+    .status-opt.orange input:checked + label { border-color: #E65100; color: #E65100; background: #FFF3E0; }
+    .status-opt.gray   input:checked + label { border-color: #546E7A; color: #546E7A; background: #ECEFF1; }
+
+    /* ACTION ROW */
+    .action-row { display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; }
+    .btn-cancel { padding: 12px 28px; border-radius: 9px; font-size: 14px; font-weight: 700; font-family: inherit; border: 1.5px solid var(--border); background: white; color: var(--sub); cursor: pointer; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; }
+    .btn-cancel:hover { background: var(--bg); }
+    .btn-submit { padding: 12px 32px; border-radius: 9px; font-size: 14px; font-weight: 800; font-family: inherit; border: none; background: var(--accent); color: #fff; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 8px; }
+    .btn-submit:hover { background: #BF360C; transform: translateY(-1px); }
+
+    /* TOAST */
+    #toast { position: fixed; bottom: 28px; right: 28px; z-index: 99999; padding: 13px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: inherit; box-shadow: 0 6px 24px rgba(0,0,0,.18); transform: translateY(80px); opacity: 0; transition: all .3s cubic-bezier(.34,1.56,.64,1); pointer-events: none; }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { background: #1B5E20; color: #fff; }
+    #toast.error   { background: #B71C1C; color: #fff; }
+    #toast.info    { background: var(--primary); color: #fff; }
+
+    .required { color: #E65100; }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="tb-logo">
+    <span class="tb-logo-sub">행정사사무소</span>
+    <span class="tb-logo-main">위민</span>
+  </div>
+  <span class="tb-badge" id="pageMode">수임계약 등록</span>
+  <div class="tb-actions" style="margin-left:auto;">
+    <a href="panel.html" class="tb-btn tb-view">⚙️ 관리 패널</a>
+    <a href="index.html?from=logout" onclick="WeiminCMS&&WeiminCMS.logout()" class="tb-btn tb-logout">로그아웃</a>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="nav-group-label">수임 관리</div>
+    <a class="nav-item active" href="contract-new.html"><span class="nav-icon">✏️</span><span class="nav-label">계약 등록</span></a>
+    <a class="nav-item" href="contracts.html"><span class="nav-icon">📂</span><span class="nav-label">계약 목록</span></a>
+    <a class="nav-item" href="calendar.html"><span class="nav-icon">📅</span><span class="nav-label">업무 캘린더</span></a>
+    <div class="nav-group-label">사이트 관리</div>
+    <a class="nav-item" href="panel.html"><span class="nav-icon">⚙️</span><span class="nav-label">관리 패널</span></a>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div class="page-wrap">
+
+      <div class="page-hd">
+        <div class="page-hd-icon" id="pageIcon">✏️</div>
+        <div>
+          <h2 id="pageTitle">수임계약 등록</h2>
+          <p id="pageDesc">새 수임계약 정보를 입력하면 업무 캘린더에 자동 등록됩니다</p>
+        </div>
+      </div>
+
+      <!-- D드라이브 상태 -->
+      <div class="drive-banner disconnected" id="driveBanner">
+        <span id="driveMsg">💾 D드라이브 폴더가 연결되지 않았습니다. 연결하면 자동으로 저장됩니다.</span>
+        <button class="btn-connect do" id="btnConnect" onclick="connectDrive()">📁 폴더 연결</button>
+      </div>
+
+      <!-- 의뢰인 정보 -->
+      <div class="card">
+        <div class="card-title">👤 의뢰인 정보</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>상호/성명 <span class="required">*</span></label>
+            <input type="text" id="clientName" placeholder="홍길동 또는 (주)위민기업" required>
+          </div>
+          <div class="field">
+            <label>연락처 <span class="required">*</span></label>
+            <input type="text" id="clientPhone" placeholder="010-0000-0000">
+          </div>
+          <div class="field">
+            <label>이메일 <span style="font-size:11px;color:var(--sub)">(만기 알림 발송)</span></label>
+            <input type="email" id="clientEmail" placeholder="example@email.com">
+          </div>
+          <div class="field">
+            <label>사업자번호 / 생년월일</label>
+            <input type="text" id="clientReg" placeholder="000-00-00000">
+          </div>
+        </div>
+      </div>
+
+      <!-- 계약 정보 -->
+      <div class="card">
+        <div class="card-title">📋 계약 정보</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>업무 분야 <span class="required">*</span></label>
+            <select id="bizType">
+              <option value="">-- 선택 --</option>
+              <option value="인허가">인허가</option>
+              <option value="인증">인증</option>
+              <option value="출입국">출입국</option>
+              <option value="조달">조달</option>
+              <option value="행정심판">행정심판</option>
+              <option value="사실조사">사실조사</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>세부 업무명</label>
+            <input type="text" id="bizDetail" placeholder="예: 건설업 면허 갱신, 비자 연장 등">
+          </div>
+          <div class="field">
+            <label>계약일 <span class="required">*</span></label>
+            <input type="date" id="contractDate">
+          </div>
+          <div class="field">
+            <label>등록 만기일 <span style="font-size:11px;color:#E65100">★ 캘린더 알림 기준</span></label>
+            <input type="date" id="expiryDate">
+            <span class="field-hint">입력 시 D-14, D-7, D-3, D-1, D-0 알림 발송</span>
+          </div>
+          <div class="field">
+            <label>수임료</label>
+            <input type="text" id="fee" placeholder="500,000" oninput="formatFee(this)">
+          </div>
+          <div class="field">
+            <label>담당자</label>
+            <input type="text" id="manager" placeholder="이름">
+          </div>
+        </div>
+      </div>
+
+      <!-- 진행 상태 -->
+      <div class="card">
+        <div class="card-title">🔄 진행 상태</div>
+        <div class="status-row">
+          <div class="status-opt">
+            <input type="radio" name="status" id="s1" value="접수" checked>
+            <label for="s1">접수</label>
+          </div>
+          <div class="status-opt green">
+            <input type="radio" name="status" id="s2" value="진행중">
+            <label for="s2">진행중</label>
+          </div>
+          <div class="status-opt orange">
+            <input type="radio" name="status" id="s3" value="완료">
+            <label for="s3">완료</label>
+          </div>
+          <div class="status-opt gray">
+            <input type="radio" name="status" id="s4" value="보류">
+            <label for="s4">보류</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 메모 -->
+      <div class="card">
+        <div class="card-title">📝 메모</div>
+        <div class="field">
+          <textarea id="memo" placeholder="처리 경과, 특이사항, 첨부서류 안내 등 자유롭게 입력하세요"></textarea>
+        </div>
+      </div>
+
+      <!-- 액션 버튼 -->
+      <div class="action-row">
+        <a href="contracts.html" class="btn-cancel">취소</a>
+        <button class="btn-submit" onclick="submitContract()">
+          <span id="submitIcon">💾</span>
+          <span id="submitText">계약 등록</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="../js/main.js"></script>
+<script src="js/weimin-contracts.js"></script>
+<script>
+/* 인증 확인 */
+if (typeof WeiminCMS !== 'undefined' && !WeiminCMS.isAdmin()) location.href = 'index.html';
+
+/* 수정 모드 확인 */
+const _editId = new URLSearchParams(location.search).get('edit');
+
+/* 초기화 */
+(async () => {
+  // 오늘 날짜 기본값
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('contractDate').value = today;
+
+  // D드라이브 복원 시도
+  const ok = await WeiminContracts.tryRestoreDir();
+  updateDriveBanner(ok);
+
+  // 수정 모드
+  if (_editId) {
+    const c = WeiminContracts.getById(_editId);
+    if (c) loadForEdit(c);
+  }
+})();
+
+function updateDriveBanner(connected) {
+  const banner = document.getElementById('driveBanner');
+  const msg    = document.getElementById('driveMsg');
+  const btn    = document.getElementById('btnConnect');
+  if (connected) {
+    banner.className = 'drive-banner connected';
+    msg.textContent  = '✅ D드라이브 폴더에 자동 저장됩니다';
+    btn.className    = 'btn-connect done';
+    btn.textContent  = '✔ 연결됨';
+    btn.onclick      = null;
+  } else {
+    banner.className = 'drive-banner disconnected';
+    msg.textContent  = '💾 D드라이브 폴더가 연결되지 않았습니다. 연결하면 자동으로 저장됩니다.';
+    btn.className    = 'btn-connect do';
+    btn.textContent  = '📁 폴더 연결';
+    btn.onclick      = connectDrive;
+  }
+}
+
+async function connectDrive() {
+  const r = await WeiminContracts.connectFolder();
+  if (r.ok)          { updateDriveBanner(true); toast('D드라이브 폴더가 연결되었습니다!', 'success'); }
+  else if (!r.cancelled) toast('폴더 연결에 실패했습니다: ' + (r.error || ''), 'error');
+}
+
+function loadForEdit(c) {
+  document.getElementById('pageMode').textContent   = '수임계약 수정';
+  document.getElementById('pageTitle').textContent  = '수임계약 수정';
+  document.getElementById('pageDesc').textContent   = '계약 정보를 수정합니다';
+  document.getElementById('pageIcon').textContent   = '✏️';
+  document.getElementById('submitIcon').textContent = '💾';
+  document.getElementById('submitText').textContent = '수정 저장';
+
+  document.getElementById('clientName').value  = c.clientName  || '';
+  document.getElementById('clientPhone').value = c.clientPhone || '';
+  document.getElementById('clientEmail').value = c.clientEmail || '';
+  document.getElementById('clientReg').value   = c.clientReg   || '';
+  document.getElementById('bizType').value     = c.bizType     || '';
+  document.getElementById('bizDetail').value   = c.bizDetail   || '';
+  document.getElementById('contractDate').value = c.contractDate || '';
+  document.getElementById('expiryDate').value  = c.expiryDate  || '';
+  document.getElementById('fee').value         = c.fee         || '';
+  document.getElementById('manager').value     = c.manager     || '';
+  document.getElementById('memo').value        = c.memo        || '';
+
+  const sEl = document.querySelector(`input[name="status"][value="${c.status || '접수'}"]`);
+  if (sEl) sEl.checked = true;
+}
+
+function formatFee(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  el.value  = raw ? (+raw).toLocaleString() : '';
+}
+
+function getStatus() {
+  const checked = document.querySelector('input[name="status"]:checked');
+  return checked ? checked.value : '접수';
+}
+
+async function submitContract() {
+  const clientName   = document.getElementById('clientName').value.trim();
+  const clientPhone  = document.getElementById('clientPhone').value.trim();
+  const bizType      = document.getElementById('bizType').value;
+  const contractDate = document.getElementById('contractDate').value;
+
+  if (!clientName)   { toast('상호/성명을 입력해주세요.', 'error'); document.getElementById('clientName').focus(); return; }
+  if (!bizType)      { toast('업무 분야를 선택해주세요.', 'error'); document.getElementById('bizType').focus(); return; }
+  if (!contractDate) { toast('계약일을 입력해주세요.', 'error'); document.getElementById('contractDate').focus(); return; }
+
+  const feeRaw = document.getElementById('fee').value.replace(/[^0-9]/g, '');
+
+  const data = {
+    clientName, clientPhone,
+    clientEmail : document.getElementById('clientEmail').value.trim(),
+    clientReg   : document.getElementById('clientReg').value.trim(),
+    bizType,
+    bizDetail   : document.getElementById('bizDetail').value.trim(),
+    contractDate,
+    expiryDate  : document.getElementById('expiryDate').value || '',
+    fee         : feeRaw ? +feeRaw : '',
+    manager     : document.getElementById('manager').value.trim(),
+    status      : getStatus(),
+    memo        : document.getElementById('memo').value.trim(),
+  };
+
+  try {
+    if (_editId) {
+      await WeiminContracts.update(_editId, data);
+      toast('수임계약이 수정되었습니다!', 'success');
+    } else {
+      await WeiminContracts.add(data);
+      toast('수임계약이 등록되었습니다! 캘린더에 자동 반영됩니다.', 'success');
+    }
+    setTimeout(() => location.href = 'contracts.html', 1200);
+  } catch (e) {
+    toast('저장 중 오류: ' + e.message, 'error');
+  }
+}
+
+/* Toast */
+let _tt;
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = (type === 'success' ? '✅ ' : type === 'error' ? '❌ ' : 'ℹ️ ') + msg;
+  el.className = 'show ' + type;
+  clearTimeout(_tt);
+  _tt = setTimeout(() => { el.className = ''; }, 3200);
+}
+</script>
+</body>
+</html>

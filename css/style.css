@@ -745,3 +745,52 @@ body.homepage .mobile-menu {
     color: #fff !important;
     border-bottom-color: var(--accent) !important;
 }
+
+/* ── 다국어 언어 선택 ── */
+.wi-lang-wrap { position: relative; display: flex; align-items: center; }
+.wi-lang-btn {
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 20px; padding: 5px 12px;
+    color: #fff; font-size: 13px; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+    transition: background .18s;
+}
+.wi-lang-btn:hover { background: rgba(255,255,255,.2); }
+.wi-lang-drop {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    background: #0a1929; border-radius: 10px; min-width: 130px;
+    padding: 6px 0; list-style: none;
+    box-shadow: 0 8px 28px rgba(0,0,0,.45);
+    border: 1px solid rgba(255,255,255,.1);
+    z-index: 9999;
+}
+.wi-lang-opt {
+    display: block; width: 100%;
+    padding: 9px 16px; background: none; border: none;
+    color: #b0c4d8; font-size: 14px; font-weight: 500;
+    text-align: left; cursor: pointer;
+    transition: background .15s, color .15s;
+    font-family: inherit;
+}
+.wi-lang-opt:hover { background: rgba(255,255,255,.08); color: #fff; }
+.wi-lang-opt.wi-active { color: #fff; font-weight: 700; }
+@media (max-width: 900px) {
+    .wi-lang-wrap { display: none; }
+}
+
+/* ── 영어/중문 히어로 제목 자동 축소 ── */
+html[lang="en"] .hero-left h1 {
+    font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+    white-space: normal;
+    letter-spacing: .5px;
+    line-height: 1.3;
+}
+html[lang="en"] .hero-left h1 strong {
+    font-size: clamp(1.5rem, 2.7vw, 2.1rem);
+    letter-spacing: 1px;
+}
+html[lang="zh"] .hero-left h1 {
+    white-space: normal;
+}

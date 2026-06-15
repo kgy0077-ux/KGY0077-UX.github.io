@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>업무 캘린더 — 행정사사무소 위민</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sidebar-w: 220px; --topbar-h: 56px;
+      --primary: #1B4F8A; --accent: #E65100;
+      --bg: #F0F4F8; --border: #DDE3EC;
+      --text: #1a2230; --sub: #5a6a7e;
+      --card: #ffffff; --sh: 0 2px 10px rgba(0,0,0,.07);
+    }
+    body { font-family: 'Malgun Gothic','맑은 고딕',sans-serif; background: var(--bg); color: var(--text); }
+
+    /* ── TOPBAR ── */
+    .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: var(--topbar-h); background: #070f1a; display: flex; align-items: center; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+    .tb-logo { display: flex; flex-direction: column; line-height: 1.1; margin-right: auto; }
+    .tb-logo-sub  { font-size: 10px; color: #6b7e96; letter-spacing: 1px; }
+    .tb-logo-main { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: 2px; }
+    .tb-badge { background: rgba(255,213,79,.15); color: #FFD54F; border: 1px solid rgba(255,213,79,.3); font-size: 11px; padding: 3px 12px; border-radius: 50px; margin-left: 12px; letter-spacing: 1px; }
+    .tb-actions { display: flex; gap: 10px; }
+    .tb-btn { padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; border: none; font-family: inherit; transition: all .2s; }
+    .tb-view   { background: rgba(255,255,255,.1); color: #ccd; }
+    .tb-view:hover { background: rgba(255,255,255,.2); color: #fff; }
+    .tb-logout { background: rgba(200,60,60,.2); color: #f99; }
+    .tb-logout:hover { background: rgba(200,60,60,.4); }
+    .tb-new { background: var(--accent); color: #fff; }
+    .tb-new:hover { background: #BF360C; }
+
+    /* ── LAYOUT ── */
+    .layout { display: flex; margin-top: var(--topbar-h); min-height: calc(100vh - var(--topbar-h)); }
+
+    /* ── SIDEBAR ── */
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: #0D2B4E; position: fixed; top: var(--topbar-h); bottom: 0; left: 0; overflow-y: auto; }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+    .nav-group-label { font-size: 10px; color: rgba(255,255,255,.3); letter-spacing: 2px; padding: 18px 18px 6px; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 18px; cursor: pointer; font-size: 14px; color: #8899aa; transition: all .18s; border-left: 3px solid transparent; text-decoration: none; }
+    .nav-item:hover { background: rgba(255,255,255,.05); color: #ccd; }
+    .nav-item.active { background: rgba(255,255,255,.08); color: #fff; border-left-color: var(--accent); }
+    .nav-item .nav-icon { font-size: 18px; flex-shrink: 0; }
+    .nav-item .nav-label { font-weight: 600; }
+
+    /* ── MAIN ── */
+    .main-content { margin-left: var(--sidebar-w); flex: 1; padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+
+    /* ── 상단 영역: 캘린더 헤더 + 알림 패널 ── */
+    .top-row { display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: start; }
+    @media (max-width: 1100px) { .top-row { grid-template-columns: 1fr; } }
+
+    /* ── 캘린더 카드 ── */
+    .cal-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--sh); overflow: hidden; }
+
+    .cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--border); }
+    .cal-title { font-size: 20px; font-weight: 900; color: var(--primary); }
+    .cal-nav-btns { display: flex; gap: 8px; align-items: center; }
+    .cal-nav-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid var(--border); background: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .18s; }
+    .cal-nav-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn-today { padding: 6px 16px; border-radius: 8px; border: 1.5px solid var(--primary); background: white; color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .18s; }
+    .btn-today:hover { background: var(--primary); color: white; }
+
+    /* ── 캘린더 그리드 ── */
+    .cal-dow-row { display: grid; grid-template-columns: repeat(7, 1fr); background: #F8FAFC; border-bottom: 1px solid var(--border); }
+    .cal-dow { text-align: center; padding: 10px 0; font-size: 12px; font-weight: 700; color: var(--sub); }
+    .cal-dow:first-child { color: #C62828; }
+    .cal-dow:last-child  { color: #1565C0; }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .cal-cell { min-height: 100px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 6px; position: relative; transition: background .15s; }
+    .cal-cell:nth-child(7n) { border-right: none; }
+    .cal-cell:hover { background: #F8FAFC; }
+    .cal-cell.other-month { background: #FAFBFC; }
+    .cal-cell.other-month .cell-day { color: #C8D0D8; }
+    .cal-cell.today { background: #EEF4FF; }
+    .cal-cell.today .cell-day { background: var(--primary); color: white; }
+    .cal-cell.sunday  .cell-day { color: #C62828; }
+    .cal-cell.saturday .cell-day { color: #1565C0; }
+
+    .cell-day { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+
+    .event-chip { display: block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-bottom: 2px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .15s; line-height: 1.5; }
+    .event-chip:hover { opacity: .8; }
+    .chip-contract { background: #E3F2FD; color: #1565C0; }
+    .chip-expiry-ok       { background: #E8F5E9; color: #2E7D32; }
+    .chip-expiry-caution  { background: #FFFDE7; color: #F57F17; }
+    .chip-expiry-warn     { background: #FFF3E0; color: #E65100; }
+    .chip-expiry-critical { background: #FFEBEE; color: #C62828; }
+    .chip-expiry-dday     { background: #C62828; color: #fff; }
+    .chip-more { background: var(--border); color: var(--sub); font-size: 10px; padding: 1px 5px; border-radius: 3px; cursor: pointer; }
+
+    /* ── 알림 패널 ── */
+    .alert-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--sh); overflow: hidden; }
+    .alert-panel-hd { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .alert-panel-hd h3 { font-size: 14px; font-weight: 800; color: var(--primary); }
+    .alert-count { background: #FFEBEE; color: #C62828; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 50px; }
+    .alert-list { max-height: 420px; overflow-y: auto; }
+    .alert-list::-webkit-scrollbar { width: 4px; }
+    .alert-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .alert-item { padding: 12px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; }
+    .alert-item:last-child { border-bottom: none; }
+    .alert-item:hover { background: #F8FAFC; }
+    .alert-item-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+    .alert-name { font-size: 13px; font-weight: 700; }
+    .alert-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 50px; }
+    .alert-badge.d0  { background: #C62828; color: #fff; }
+    .alert-badge.d7  { background: #FFEBEE; color: #C62828; }
+    .alert-badge.d14 { background: #FFF3E0; color: #E65100; }
+    .alert-badge.dX  { background: #FFFDE7; color: #F57F17; }
+    .alert-meta { font-size: 11px; color: var(--sub); }
+    .alert-empty { padding: 32px; text-align: center; color: var(--sub); font-size: 13px; }
+
+    /* ── 알림 발송 결과 배너 ── */
+    .notify-banner { border-radius: 10px; padding: 12px 18px; font-size: 13px; display: none; }
+    .notify-banner.show { display: block; }
+    .notify-banner.sent    { background: #E8F5E9; border: 1px solid #A5D6A7; color: #1B5E20; }
+    .notify-banner.nosend  { background: #F3F4F6; border: 1px solid var(--border); color: var(--sub); }
+    .notify-banner.partial { background: #FFF8E1; border: 1px solid #FFD54F; color: #E65100; }
+
+    /* ── 범례 ── */
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; padding: 12px 20px; border-top: 1px solid var(--border); background: #F8FAFC; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--sub); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ── 설정 모달 ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 9000; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: white; border-radius: 18px; padding: 32px; width: 90%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,.3); }
+    .modal-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .modal-title { font-size: 18px; font-weight: 800; color: var(--primary); }
+    .modal-close { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--border); background: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .modal-section { margin-bottom: 24px; }
+    .modal-section-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #EEF4FF; }
+    .m-field { margin-bottom: 14px; }
+    .m-field label { display: block; font-size: 12px; font-weight: 700; color: var(--sub); margin-bottom: 6px; letter-spacing: .5px; }
+    .m-field input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; }
+    .m-field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,79,138,.1); }
+    .m-field .field-hint { font-size: 11px; color: var(--sub); margin-top: 4px; }
+    .m-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .m-toggle input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+    .m-toggle label { font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-save-settings { width: 100%; padding: 13px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 800; font-family: inherit; cursor: pointer; margin-top: 8px; transition: all .2s; }
+    .btn-save-settings:hover { background: #BF360C; }
+    .kakao-login-row { display: flex; gap: 10px; align-items: center; }
+    .btn-kakao { flex: 1; padding: 10px; background: #FEE500; color: #000; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-kakao:hover { background: #F0D800; }
+    .kakao-status { font-size: 12px; color: var(--sub); }
+    .kakao-status.ok { color: #2E7D32; }
+
+    /* ── 이벤트 상세 모달 ── */
+    .event-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 9001; align-items: center; justify-content: center; }
+    .event-modal.show { display: flex; }
+    .event-box { background: white; border-radius: 16px; padding: 28px; width: 90%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .event-box-title { font-size: 16px; font-weight: 800; margin-bottom: 16px; color: var(--primary); display: flex; justify-content: space-between; align-items: center; }
+    .event-detail-row { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .event-detail-row:last-of-type { border-bottom: none; }
+    .event-detail-label { width: 80px; flex-shrink: 0; font-weight: 700; color: var(--sub); }
+    .event-detail-val   { color: var(--text); flex: 1; }
+    .event-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+    .evt-btn { padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+    .evt-edit { background: var(--primary); color: #fff; border: none; }
+    .evt-close { background: white; color: var(--sub); border: 1.5px solid var(--border); }
+
+    /* 드라이브 배너 */
+    .drive-banner { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; border-radius: 9px; font-size: 12px; }
+    .drive-banner.connected    { background: #E8F5E9; border: 1px solid #A5D6A7; color: #1B5E20; }
+    .drive-banner.disconnected { background: #FFF8E1; border: 1px solid #FFD54F; color: #E65100; }
+    .btn-connect { padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; }
+    .btn-connect.do   { background: var(--accent); color: #fff; }
+    .btn-connect.done { background: #2E7D32; color: #fff; cursor: default; }
+
+    #toast { position: fixed; bottom: 28px; right: 28px; z-index: 99999; padding: 13px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: inherit; box-shadow: 0 6px 24px rgba(0,0,0,.18); transform: translateY(80px); opacity: 0; transition: all .3s cubic-bezier(.34,1.56,.64,1); pointer-events: none; }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { background: #1B5E20; color: #fff; }
+    #toast.error   { background: #B71C1C; color: #fff; }
+    #toast.info    { background: var(--primary); color: #fff; }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="tb-logo">
+    <span class="tb-logo-sub">행정사사무소</span>
+    <span class="tb-logo-main">위민</span>
+  </div>
+  <span class="tb-badge">업무 캘린더</span>
+  <div class="tb-actions" style="margin-left:auto;">
+    <a href="contract-new.html" class="tb-btn tb-new">+ 계약 등록</a>
+    <button class="tb-btn tb-view" onclick="openSettings()">⚙️ 알림 설정</button>
+    <a href="panel.html" class="tb-btn tb-view">관리 패널</a>
+    <a href="index.html?from=logout" onclick="WeiminCMS&&WeiminCMS.logout()" class="tb-btn tb-logout">로그아웃</a>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-group-label">수임 관리</div>
+    <a class="nav-item" href="contract-new.html"><span class="nav-icon">✏️</span><span class="nav-label">계약 등록</span></a>
+    <a class="nav-item" href="contracts.html"><span class="nav-icon">📂</span><span class="nav-label">계약 목록</span></a>
+    <a class="nav-item active" href="calendar.html"><span class="nav-icon">📅</span><span class="nav-label">업무 캘린더</span></a>
+    <div class="nav-group-label">사이트 관리</div>
+    <a class="nav-item" href="panel.html"><span class="nav-icon">⚙️</span><span class="nav-label">관리 패널</span></a>
+  </aside>
+
+  <div class="main-content">
+
+    <!-- 드라이브 배너 -->
+    <div class="drive-banner disconnected" id="driveBanner">
+      <span id="driveMsg">💾 D드라이브 미연결</span>
+      <button class="btn-connect do" id="btnConnect" onclick="connectDrive()">📁 폴더 연결</button>
+    </div>
+
+    <!-- 알림 발송 결과 배너 -->
+    <div class="notify-banner" id="notifyBanner"></div>
+
+    <!-- 캘린더 + 알림 패널 -->
+    <div class="top-row">
+
+      <!-- 캘린더 -->
+      <div class="cal-card">
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="moveMonth(-1)">&#8249;</button>
+          <div class="cal-title" id="calTitle"></div>
+          <div class="cal-nav-btns">
+            <button class="btn-today" onclick="goToday()">오늘</button>
+            <button class="cal-nav-btn" onclick="moveMonth(1)">&#8250;</button>
+          </div>
+        </div>
+        <div class="cal-dow-row">
+          <div class="cal-dow">일</div><div class="cal-dow">월</div>
+          <div class="cal-dow">화</div><div class="cal-dow">수</div>
+          <div class="cal-dow">목</div><div class="cal-dow">금</div>
+          <div class="cal-dow">토</div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#BBDEFB"></div>계약일</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#C8E6C9"></div>만기(여유)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FFF9C4"></div>만기 D-30</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FFCCBC"></div>만기 D-14</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FFCDD2"></div>만기 D-7 이내</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#C62828;border-radius:50%"></div>D-Day</div>
+        </div>
+      </div>
+
+      <!-- 알림 패널 -->
+      <div class="alert-panel">
+        <div class="alert-panel-hd">
+          <h3>⏰ 만기 임박 목록</h3>
+          <span class="alert-count" id="alertCount">0</span>
+        </div>
+        <div class="alert-list" id="alertList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 설정 모달 -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <div class="modal-title">⚙️ 알림 설정</div>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+
+    <!-- 이메일 설정 (EmailJS) -->
+    <div class="modal-section">
+      <div class="modal-section-title">📧 이메일 알림 (EmailJS)</div>
+      <div class="m-toggle">
+        <input type="checkbox" id="emailEnabled">
+        <label for="emailEnabled">이메일 알림 활성화</label>
+      </div>
+      <div class="m-field">
+        <label>받는 이메일 주소</label>
+        <input type="email" id="emailTo" placeholder="kgy0077@naver.com">
+      </div>
+      <div class="m-field">
+        <label>EmailJS Public Key</label>
+        <input type="text" id="ejsPublicKey" placeholder="user_xxxxxxxxxxxxxxx">
+        <div class="field-hint">💡 <a href="https://www.emailjs.com/" target="_blank">emailjs.com</a> 가입 → Account → API Keys에서 확인</div>
+      </div>
+      <div class="m-field">
+        <label>EmailJS Service ID</label>
+        <input type="text" id="ejsServiceId" placeholder="service_xxxxxxx">
+        <div class="field-hint">💡 EmailJS → Email Services에서 확인</div>
+      </div>
+      <div class="m-field">
+        <label>EmailJS Template ID</label>
+        <input type="text" id="ejsTemplateId" placeholder="template_xxxxxxx">
+        <div class="field-hint">💡 EmailJS → Email Templates에서 확인. 템플릿 변수: <code>{{client_name}}</code>, <code>{{biz_type}}</code>, <code>{{expiry_date}}</code>, <code>{{days_left}}</code></div>
+      </div>
+    </div>
+
+    <!-- 카카오 설정 -->
+    <div class="modal-section">
+      <div class="modal-section-title">💬 카카오톡 알림 (나에게 보내기)</div>
+      <div class="m-toggle">
+        <input type="checkbox" id="kakaoEnabled">
+        <label for="kakaoEnabled">카카오톡 알림 활성화</label>
+      </div>
+      <div class="m-field">
+        <label>카카오 JavaScript 앱 키</label>
+        <input type="text" id="kakaoAppKey" placeholder="카카오 개발자 콘솔에서 확인">
+        <div class="field-hint">💡 <a href="https://developers.kakao.com/" target="_blank">developers.kakao.com</a> → 내 애플리케이션 → 앱 키 → JavaScript 키</div>
+      </div>
+      <div class="kakao-login-row">
+        <button class="btn-kakao" onclick="kakaoLogin()">🔑 카카오 로그인 (연결)</button>
+        <span class="kakao-status" id="kakaoStatus">미연결</span>
+      </div>
+    </div>
+
+    <button class="btn-save-settings" onclick="saveSettings()">💾 설정 저장</button>
+  </div>
+</div>
+
+<!-- 이벤트 상세 모달 -->
+<div class="event-modal" id="eventModal">
+  <div class="event-box">
+    <div class="event-box-title">
+      <span id="evtTitle">계약 상세</span>
+      <button class="modal-close" onclick="closeEventModal()">✕</button>
+    </div>
+    <div id="evtBody"></div>
+    <div class="event-actions">
+      <button class="evt-btn evt-close" onclick="closeEventModal()">닫기</button>
+      <a class="evt-btn evt-edit" id="evtEditLink" href="#">✏️ 수정</a>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<!-- Kakao SDK -->
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" crossorigin="anonymous"></script>
+<script src="../js/main.js"></script>
+<script src="js/weimin-contracts.js"></script>
+<script>
+if (typeof WeiminCMS !== 'undefined' && !WeiminCMS.isAdmin()) location.href = 'index.html';
+
+const BIZ_ICON = { 인허가:'📋', 인증:'🏆', 출입국:'✈️', 조달:'🏛️', 행정심판:'⚖️', 사실조사:'🔍', 기타:'📌' };
+let _year, _month; // 현재 표시 연/월
+
+/* ── 초기화 ── */
+(async () => {
+  const now = new Date();
+  _year  = now.getFullYear();
+  _month = now.getMonth();
+
+  await WeiminContracts.tryRestoreDir();
+  updateDriveBanner(WeiminContracts.isConnected());
+  renderCalendar();
+  renderAlertPanel();
+  loadSettingsUI();
+  restoreKakaoToken();
+  await runAlerts();
+})();
+
+/* ── D드라이브 배너 ── */
+function updateDriveBanner(ok) {
+  const banner = document.getElementById('driveBanner');
+  const msg    = document.getElementById('driveMsg');
+  const btn    = document.getElementById('btnConnect');
+  if (ok) {
+    banner.className = 'drive-banner connected';
+    msg.textContent  = '✅ D드라이브 자동 저장 중';
+    btn.className    = 'btn-connect done';
+    btn.textContent  = '✔ 연결됨';
+    btn.onclick      = null;
+  } else {
+    banner.className = 'drive-banner disconnected';
+    msg.textContent  = '💾 D드라이브 미연결';
+    btn.className    = 'btn-connect do';
+    btn.textContent  = '📁 폴더 연결';
+    btn.onclick      = connectDrive;
+  }
+}
+
+async function connectDrive() {
+  const r = await WeiminContracts.connectFolder();
+  if (r.ok) { updateDriveBanner(true); toast('D드라이브 연결 완료!', 'success'); renderCalendar(); renderAlertPanel(); }
+  else if (!r.cancelled) toast('폴더 연결 실패: ' + (r.error || ''), 'error');
+}
+
+/* ── 캘린더 렌더링 ── */
+function renderCalendar() {
+  document.getElementById('calTitle').textContent = `${_year}년 ${_month + 1}월`;
+
+  const contracts = WeiminContracts.getAll();
+  const eventMap  = buildEventMap(contracts);
+
+  const first = new Date(_year, _month, 1);
+  const startDow = first.getDay(); // 0=일
+  const daysInMonth = new Date(_year, _month + 1, 0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  let html = '';
+  let dayOffset = 1 - startDow;
+
+  for (let row = 0; row < 6; row++) {
+    let hasContent = false;
+    let rowHtml = '';
+    for (let col = 0; col < 7; col++) {
+      const d = new Date(_year, _month, dayOffset);
+      const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const isCurrentMonth = (d.getMonth() === _month && d.getFullYear() === _year);
+      const isToday = ds === todayStr;
+      const isSun = col === 0, isSat = col === 6;
+
+      if (isCurrentMonth) hasContent = true;
+
+      const cls = [
+        'cal-cell',
+        !isCurrentMonth ? 'other-month' : '',
+        isToday          ? 'today' : '',
+        isSun            ? 'sunday' : '',
+        isSat            ? 'saturday' : '',
+      ].filter(Boolean).join(' ');
+
+      const events = eventMap[ds] || [];
+      const MAX_SHOW = 3;
+      let evHtml = '';
+      events.slice(0, MAX_SHOW).forEach(ev => {
+        const chipCls = getChipClass(ev);
+        const icon = BIZ_ICON[ev.contract.bizType] || '';
+        evHtml += `<span class="event-chip ${chipCls}" onclick="openEventModal('${ev.contract.id}','${ev.type}')" title="${esc(ev.contract.clientName)}">${icon} ${esc(ev.contract.clientName)}</span>`;
+      });
+      if (events.length > MAX_SHOW) {
+        evHtml += `<span class="chip-more" onclick="openDayModal('${ds}')">+${events.length - MAX_SHOW}건</span>`;
+      }
+
+      rowHtml += `<div class="${cls}">
+        <div class="cell-day">${d.getDate()}</div>
+        ${evHtml}
+      </div>`;
+      dayOffset++;
+    }
+    // 마지막 빈 행 생략
+    if (row < 4 || hasContent || row === 0) html += rowHtml;
+  }
+
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+function buildEventMap(contracts) {
+  const map = {};
+  for (const c of contracts) {
+    if (c.contractDate) {
+      (map[c.contractDate] = map[c.contractDate] || []).push({ type: 'contract', contract: c });
+    }
+    if (c.expiryDate && c.status !== '완료') {
+      (map[c.expiryDate] = map[c.expiryDate] || []).push({ type: 'expiry', contract: c });
+    }
+  }
+  return map;
+}
+
+function getChipClass(ev) {
+  if (ev.type === 'contract') return 'chip-contract';
+  const d = WeiminContracts.daysUntil(ev.contract.expiryDate);
+  if (d === 0)   return 'chip-expiry-dday';
+  if (d <= 7)    return 'chip-expiry-critical';
+  if (d <= 14)   return 'chip-expiry-warn';
+  if (d <= 30)   return 'chip-expiry-caution';
+  return                  'chip-expiry-ok';
+}
+
+function moveMonth(delta) {
+  _month += delta;
+  if (_month > 11) { _month = 0;  _year++; }
+  if (_month < 0)  { _month = 11; _year--; }
+  renderCalendar();
+}
+
+function goToday() {
+  const n = new Date();
+  _year = n.getFullYear(); _month = n.getMonth();
+  renderCalendar();
+}
+
+/* ── 만기 임박 패널 ── */
+function renderAlertPanel() {
+  const all = WeiminContracts.getAll()
+    .filter(c => c.expiryDate && c.status !== '완료')
+    .map(c => ({ c, d: WeiminContracts.daysUntil(c.expiryDate) }))
+    .filter(x => x.d <= 30)
+    .sort((a, b) => a.d - b.d);
+
+  document.getElementById('alertCount').textContent = all.filter(x => x.d <= 14 && x.d >= 0).length;
+
+  if (!all.length) {
+    document.getElementById('alertList').innerHTML = '<div class="alert-empty">⭕ 30일 이내 만기 건이 없습니다</div>';
+    return;
+  }
+
+  document.getElementById('alertList').innerHTML = all.map(({ c, d }) => {
+    let badge = '', badgeCls = '';
+    if (d < 0)     { badge = `경과 ${Math.abs(d)}일`;  badgeCls = 'd0'; }
+    else if (d === 0) { badge = 'D-Day!';            badgeCls = 'd0'; }
+    else if (d <= 7)  { badge = `D-${d}`;            badgeCls = 'd7'; }
+    else if (d <= 14) { badge = `D-${d}`;            badgeCls = 'd14'; }
+    else              { badge = `D-${d}`;            badgeCls = 'dX'; }
+
+    return `<div class="alert-item" onclick="openEventModal('${c.id}','expiry')">
+      <div class="alert-item-top">
+        <span class="alert-name">${esc(c.clientName)} <span style="font-weight:400;color:var(--sub)">${c.bizType || ''}</span></span>
+        <span class="alert-badge ${badgeCls}">${badge}</span>
+      </div>
+      <div class="alert-meta">만기일: ${c.expiryDate}${c.bizDetail ? ' · ' + c.bizDetail : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── 이벤트 상세 모달 ── */
+function openEventModal(id, type) {
+  const c = WeiminContracts.getById(id);
+  if (!c) return;
+  const d = c.expiryDate ? WeiminContracts.daysUntil(c.expiryDate) : null;
+  const dStr = d !== null ? (d === 0 ? 'D-Day!' : d > 0 ? `D-${d}` : `경과 ${Math.abs(d)}일`) : '—';
+
+  document.getElementById('evtTitle').textContent = (BIZ_ICON[c.bizType] || '📌') + ' ' + c.clientName;
+  document.getElementById('evtBody').innerHTML = `
+    <div class="event-detail-row"><span class="event-detail-label">업무 분야</span><span class="event-detail-val">${esc(c.bizType)}${c.bizDetail ? ' · ' + esc(c.bizDetail) : ''}</span></div>
+    <div class="event-detail-row"><span class="event-detail-label">진행 상태</span><span class="event-detail-val">${esc(c.status)}</span></div>
+    <div class="event-detail-row"><span class="event-detail-label">계약일</span><span class="event-detail-val">${c.contractDate || '—'}</span></div>
+    <div class="event-detail-row"><span class="event-detail-label">만기일</span><span class="event-detail-val">${c.expiryDate || '—'} <strong style="color:#C62828">${c.expiryDate ? dStr : ''}</strong></span></div>
+    <div class="event-detail-row"><span class="event-detail-label">연락처</span><span class="event-detail-val">${esc(c.clientPhone || '—')}</span></div>
+    <div class="event-detail-row"><span class="event-detail-label">수임료</span><span class="event-detail-val">${c.fee ? (+c.fee).toLocaleString() + '원' : '—'}</span></div>
+    ${c.memo ? `<div class="event-detail-row"><span class="event-detail-label">메모</span><span class="event-detail-val">${esc(c.memo)}</span></div>` : ''}
+  `;
+  document.getElementById('evtEditLink').href = `contract-new.html?edit=${c.id}`;
+  document.getElementById('eventModal').classList.add('show');
+}
+
+function closeEventModal() {
+  document.getElementById('eventModal').classList.remove('show');
+}
+
+/* ── 알림 발송 (페이지 로드 시) ── */
+async function runAlerts() {
+  const pending = WeiminContracts.getPendingAlerts();
+  if (!pending.length) return;
+
+  const settings = WeiminContracts.getSettings();
+  let sentCount = 0, failCount = 0;
+
+  for (const { contract: c, days, key } of pending) {
+    let ok = true;
+
+    // 이메일 발송
+    if (settings.emailEnabled && settings.ejsPublicKey && settings.ejsServiceId && settings.ejsTemplateId && settings.emailTo) {
+      try {
+        await emailjs.send(settings.ejsServiceId, settings.ejsTemplateId, {
+          to_email   : settings.emailTo,
+          client_name: c.clientName,
+          biz_type   : c.bizType + (c.bizDetail ? ' · ' + c.bizDetail : ''),
+          expiry_date: c.expiryDate,
+          days_left  : days === 0 ? 'D-Day' : `D-${days}`,
+          client_phone: c.clientPhone || '',
+          memo       : c.memo || '',
+        }, settings.ejsPublicKey);
+      } catch (e) { ok = false; failCount++; }
+    }
+
+    // 카카오 발송
+    if (settings.kakaoEnabled && settings.kakaoAppKey) {
+      const token = localStorage.getItem('wcms_kakao_token');
+      if (token) {
+        try {
+          const dLabel = days === 0 ? 'D-Day' : `D-${days}`;
+          await sendKakaoMsg(token, c, dLabel);
+        } catch (e) { ok = false; failCount++; }
+      }
+    }
+
+    if (ok) { WeiminContracts.markSent(key); sentCount++; }
+  }
+
+  showNotifyBanner(pending, sentCount, failCount, settings);
+}
+
+async function sendKakaoMsg(token, c, dLabel) {
+  const text = `[위민행정사] 만기일 알림\n\n의뢰인: ${c.clientName}\n업무: ${c.bizType}${c.bizDetail ? ' · ' + c.bizDetail : ''}\n만기일: ${c.expiryDate} (${dLabel})\n연락처: ${c.clientPhone || '—'}`;
+  const res = await fetch('https://kapi.kakao.com/v2/api/talk/memo/default/send', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'template_object=' + encodeURIComponent(JSON.stringify({
+      object_type: 'text',
+      text,
+      link: { web_url: 'https://weimin.co.kr', mobile_web_url: 'https://weimin.co.kr' }
+    }))
+  });
+  if (!res.ok) throw new Error('Kakao API ' + res.status);
+}
+
+function showNotifyBanner(pending, sentCount, failCount, settings) {
+  const banner = document.getElementById('notifyBanner');
+  const isConfigured = (settings.emailEnabled && settings.ejsPublicKey) || (settings.kakaoEnabled && settings.kakaoAppKey);
+
+  if (!isConfigured) {
+    banner.className  = 'notify-banner show partial';
+    banner.innerHTML  = `⚠️ 만기 알림 대상 ${pending.length}건이 있습니다. <a href="#" onclick="openSettings();return false">알림 설정</a>에서 이메일/카카오 연결 후 자동 발송됩니다.`;
+  } else if (sentCount > 0) {
+    banner.className  = 'notify-banner show sent';
+    banner.textContent = `✅ 만기 알림 ${sentCount}건 발송 완료${failCount ? ` (${failCount}건 실패)` : ''}`;
+  } else if (failCount > 0) {
+    banner.className  = 'notify-banner show partial';
+    banner.textContent = `⚠️ 알림 발송 ${failCount}건 실패 — 설정을 확인해주세요`;
+  }
+}
+
+/* ── 설정 모달 ── */
+function loadSettingsUI() {
+  const s = WeiminContracts.getSettings();
+  document.getElementById('emailEnabled').checked  = !!s.emailEnabled;
+  document.getElementById('emailTo').value         = s.emailTo         || '';
+  document.getElementById('ejsPublicKey').value    = s.ejsPublicKey    || '';
+  document.getElementById('ejsServiceId').value    = s.ejsServiceId    || '';
+  document.getElementById('ejsTemplateId').value   = s.ejsTemplateId   || '';
+  document.getElementById('kakaoEnabled').checked  = !!s.kakaoEnabled;
+  document.getElementById('kakaoAppKey').value     = s.kakaoAppKey     || '';
+}
+
+function saveSettings() {
+  const s = {
+    emailEnabled : document.getElementById('emailEnabled').checked,
+    emailTo      : document.getElementById('emailTo').value.trim(),
+    ejsPublicKey : document.getElementById('ejsPublicKey').value.trim(),
+    ejsServiceId : document.getElementById('ejsServiceId').value.trim(),
+    ejsTemplateId: document.getElementById('ejsTemplateId').value.trim(),
+    kakaoEnabled : document.getElementById('kakaoEnabled').checked,
+    kakaoAppKey  : document.getElementById('kakaoAppKey').value.trim(),
+  };
+  WeiminContracts.saveSettings(s);
+  closeSettings();
+  toast('알림 설정이 저장되었습니다', 'success');
+}
+
+function openSettings()  { loadSettingsUI(); document.getElementById('settingsModal').classList.add('show'); }
+function closeSettings() { document.getElementById('settingsModal').classList.remove('show'); }
+
+/* ── 카카오 로그인 ── */
+function restoreKakaoToken() {
+  const token = localStorage.getItem('wcms_kakao_token');
+  const el    = document.getElementById('kakaoStatus');
+  if (token) { el.className = 'kakao-status ok'; el.textContent = '✅ 연결됨'; }
+  else        { el.className = 'kakao-status';    el.textContent = '미연결'; }
+}
+
+function kakaoLogin() {
+  const appKey = document.getElementById('kakaoAppKey').value.trim();
+  if (!appKey) { toast('카카오 앱 키를 먼저 입력해주세요', 'error'); return; }
+  try {
+    if (!Kakao.isInitialized()) Kakao.init(appKey);
+    Kakao.Auth.login({
+      success(auth) {
+        localStorage.setItem('wcms_kakao_token', auth.access_token);
+        restoreKakaoToken();
+        toast('카카오 로그인 성공!', 'success');
+      },
+      fail(e) { toast('카카오 로그인 실패: ' + (e.error_description || ''), 'error'); }
+    });
+  } catch (e) { toast('카카오 SDK 오류: ' + e.message, 'error'); }
+}
+
+/* ── 유틸 ── */
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let _tt;
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = (type==='success'?'✅ ':type==='error'?'❌ ':'ℹ️ ') + msg;
+  el.className = 'show ' + type;
+  clearTimeout(_tt);
+  _tt = setTimeout(() => { el.className = ''; }, 3500);
+}
+</script>
+</body>
+</html>

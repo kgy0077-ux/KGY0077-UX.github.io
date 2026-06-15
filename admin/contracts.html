@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수임계약 목록 — 행정사사무소 위민</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sidebar-w: 220px; --topbar-h: 56px;
+      --primary: #1B4F8A; --accent: #E65100;
+      --bg: #F0F4F8; --border: #DDE3EC;
+      --text: #1a2230; --sub: #5a6a7e;
+      --card: #ffffff; --sh: 0 2px 10px rgba(0,0,0,.07);
+    }
+    body { font-family: 'Malgun Gothic','맑은 고딕',sans-serif; background: var(--bg); color: var(--text); }
+
+    .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: var(--topbar-h); background: #070f1a; display: flex; align-items: center; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+    .tb-logo { display: flex; flex-direction: column; line-height: 1.1; margin-right: auto; }
+    .tb-logo-sub  { font-size: 10px; color: #6b7e96; letter-spacing: 1px; }
+    .tb-logo-main { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: 2px; }
+    .tb-badge { background: rgba(255,213,79,.15); color: #FFD54F; border: 1px solid rgba(255,213,79,.3); font-size: 11px; padding: 3px 12px; border-radius: 50px; margin-left: 12px; letter-spacing: 1px; }
+    .tb-actions { display: flex; gap: 10px; }
+    .tb-btn { padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; border: none; font-family: inherit; transition: all .2s; }
+    .tb-view   { background: rgba(255,255,255,.1); color: #ccd; }
+    .tb-view:hover { background: rgba(255,255,255,.2); color: #fff; }
+    .tb-logout { background: rgba(200,60,60,.2); color: #f99; }
+    .tb-logout:hover { background: rgba(200,60,60,.4); }
+    .tb-new { background: var(--accent); color: #fff; }
+    .tb-new:hover { background: #BF360C; }
+
+    .layout { display: flex; margin-top: var(--topbar-h); min-height: calc(100vh - var(--topbar-h)); }
+
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: #0D2B4E; position: fixed; top: var(--topbar-h); bottom: 0; left: 0; overflow-y: auto; }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+    .nav-group-label { font-size: 10px; color: rgba(255,255,255,.3); letter-spacing: 2px; padding: 18px 18px 6px; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 18px; cursor: pointer; font-size: 14px; color: #8899aa; transition: all .18s; border-left: 3px solid transparent; text-decoration: none; }
+    .nav-item:hover { background: rgba(255,255,255,.05); color: #ccd; }
+    .nav-item.active { background: rgba(255,255,255,.08); color: #fff; border-left-color: var(--accent); }
+    .nav-item .nav-icon { font-size: 18px; flex-shrink: 0; }
+    .nav-item .nav-label { font-weight: 600; }
+
+    .main-content { margin-left: var(--sidebar-w); flex: 1; padding: 32px; }
+
+    /* 페이지 헤더 */
+    .page-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .page-hd-left { display: flex; align-items: center; gap: 14px; }
+    .page-hd-icon { font-size: 36px; }
+    .page-hd h2 { font-size: 22px; font-weight: 800; color: var(--primary); }
+    .page-hd p  { font-size: 13px; color: var(--sub); margin-top: 3px; }
+    .btn-new { display: inline-flex; align-items: center; gap: 7px; padding: 10px 22px; background: var(--accent); color: #fff; border-radius: 9px; font-size: 14px; font-weight: 700; text-decoration: none; transition: all .2s; }
+    .btn-new:hover { background: #BF360C; transform: translateY(-1px); }
+
+    /* 통계 카드 */
+    .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 22px; }
+    @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(3, 1fr); } }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; box-shadow: var(--sh); cursor: pointer; transition: all .18s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+    .stat-card.active-filter { outline: 2.5px solid var(--primary); }
+    .stat-label { font-size: 11px; color: var(--sub); font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
+    .stat-val   { font-size: 26px; font-weight: 900; color: var(--primary); }
+    .stat-card.expiry .stat-val { color: #C62828; }
+    .stat-card.soon   .stat-val { color: #E65100; }
+
+    /* 필터 바 */
+    .filter-bar { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; box-shadow: var(--sh); }
+    .filter-bar input[type="text"] { flex: 1; min-width: 180px; padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; }
+    .filter-bar input:focus { border-color: var(--primary); }
+    .filter-bar select { padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; background: #fff; color: var(--text); cursor: pointer; }
+    .filter-bar select:focus { border-color: var(--primary); }
+    .btn-reset-filter { padding: 9px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; border: 1.5px solid var(--border); background: white; color: var(--sub); cursor: pointer; font-family: inherit; transition: all .2s; white-space: nowrap; }
+    .btn-reset-filter:hover { background: var(--bg); }
+
+    /* 드라이브 배너 */
+    .drive-banner { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; border-radius: 9px; margin-bottom: 16px; font-size: 12px; }
+    .drive-banner.connected    { background: #E8F5E9; border: 1px solid #A5D6A7; color: #1B5E20; }
+    .drive-banner.disconnected { background: #FFF8E1; border: 1px solid #FFD54F; color: #E65100; }
+    .btn-connect { padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; }
+    .btn-connect.do   { background: var(--accent); color: #fff; }
+    .btn-connect.done { background: #2E7D32; color: #fff; cursor: default; }
+
+    /* 계약 카드 리스트 */
+    #contractList { display: flex; flex-direction: column; gap: 12px; }
+    .c-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; box-shadow: var(--sh); display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; transition: box-shadow .18s; }
+    .c-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.1); }
+    .c-card.expiry-critical { border-left: 4px solid #C62828; }
+    .c-card.expiry-warn     { border-left: 4px solid #E65100; }
+    .c-card.expiry-caution  { border-left: 4px solid #F9A825; }
+    .c-card.expiry-ok       { border-left: 4px solid #2E7D32; }
+    .c-card.status-complete { opacity: .65; }
+
+    .c-left { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; }
+    .c-biz-icon { font-size: 26px; }
+    .c-biz-label { font-size: 10px; font-weight: 700; color: var(--sub); white-space: nowrap; }
+
+    .c-mid { display: flex; flex-direction: column; gap: 5px; }
+    .c-top-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .c-name  { font-size: 16px; font-weight: 800; color: var(--text); }
+    .c-detail { font-size: 12px; color: var(--sub); }
+    .c-meta  { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--sub); }
+    .c-meta span { display: flex; align-items: center; gap: 4px; }
+    .c-expiry-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; }
+    .badge-critical { background: #FFEBEE; color: #C62828; }
+    .badge-warn     { background: #FFF3E0; color: #E65100; }
+    .badge-caution  { background: #FFFDE7; color: #F9A825; }
+    .badge-ok       { background: #E8F5E9; color: #2E7D32; }
+    .badge-done     { background: #ECEFF1; color: #546E7A; }
+    .badge-none     { background: #F3F4F6; color: #9CA3AF; }
+
+    .c-right { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+    .status-sel { padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 7px; font-size: 12px; font-weight: 700; font-family: inherit; background: white; cursor: pointer; outline: none; }
+    .status-sel:focus { border-color: var(--primary); }
+    .c-actions { display: flex; gap: 6px; }
+    .c-btn { padding: 6px 12px; border-radius: 7px; font-size: 12px; font-weight: 700; border: 1.5px solid var(--border); background: white; cursor: pointer; font-family: inherit; text-decoration: none; color: var(--text); transition: all .15s; display: inline-flex; align-items: center; gap: 4px; }
+    .c-btn:hover { background: var(--bg); }
+    .c-btn.del:hover { background: #FFEBEE; border-color: #FFCDD2; color: #C62828; }
+
+    .empty-state { text-align: center; padding: 80px 20px; color: var(--sub); }
+    .empty-state .empty-icon { font-size: 56px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+
+    /* 삭제 확인 모달 */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 9000; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: white; border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 12px; color: #C62828; }
+    .modal-desc  { font-size: 14px; color: var(--sub); line-height: 1.7; margin-bottom: 24px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-cancel { padding: 10px 22px; border-radius: 8px; border: 1.5px solid var(--border); background: white; color: var(--sub); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .modal-confirm { padding: 10px 22px; border-radius: 8px; border: none; background: #C62828; color: white; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+    #toast { position: fixed; bottom: 28px; right: 28px; z-index: 99999; padding: 13px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: inherit; box-shadow: 0 6px 24px rgba(0,0,0,.18); transform: translateY(80px); opacity: 0; transition: all .3s cubic-bezier(.34,1.56,.64,1); pointer-events: none; }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { background: #1B5E20; color: #fff; }
+    #toast.error   { background: #B71C1C; color: #fff; }
+    #toast.info    { background: var(--primary); color: #fff; }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="tb-logo">
+    <span class="tb-logo-sub">행정사사무소</span>
+    <span class="tb-logo-main">위민</span>
+  </div>
+  <span class="tb-badge">수임계약 목록</span>
+  <div class="tb-actions" style="margin-left:auto;">
+    <a href="contract-new.html" class="tb-btn tb-new">+ 새 계약 등록</a>
+    <a href="panel.html" class="tb-btn tb-view">⚙️ 관리 패널</a>
+    <a href="index.html?from=logout" onclick="WeiminCMS&&WeiminCMS.logout()" class="tb-btn tb-logout">로그아웃</a>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-group-label">수임 관리</div>
+    <a class="nav-item" href="contract-new.html"><span class="nav-icon">✏️</span><span class="nav-label">계약 등록</span></a>
+    <a class="nav-item active" href="contracts.html"><span class="nav-icon">📂</span><span class="nav-label">계약 목록</span></a>
+    <a class="nav-item" href="calendar.html"><span class="nav-icon">📅</span><span class="nav-label">업무 캘린더</span></a>
+    <div class="nav-group-label">사이트 관리</div>
+    <a class="nav-item" href="panel.html"><span class="nav-icon">⚙️</span><span class="nav-label">관리 패널</span></a>
+  </aside>
+
+  <div class="main-content">
+    <!-- 헤더 -->
+    <div class="page-hd">
+      <div class="page-hd-left">
+        <div class="page-hd-icon">📂</div>
+        <div>
+          <h2>수임계약 목록</h2>
+          <p>전체 수임계약을 조회하고 진행 상태를 관리합니다</p>
+        </div>
+      </div>
+      <a href="contract-new.html" class="btn-new">✏️ 새 계약 등록</a>
+    </div>
+
+    <!-- D드라이브 배너 -->
+    <div class="drive-banner disconnected" id="driveBanner">
+      <span id="driveMsg">💾 D드라이브 미연결 — 로컬 저장 중</span>
+      <button class="btn-connect do" id="btnConnect" onclick="connectDrive()">📁 폴더 연결</button>
+    </div>
+
+    <!-- 통계 -->
+    <div class="stats-row">
+      <div class="stat-card" onclick="filterByStatus('')">
+        <div class="stat-label">전체</div>
+        <div class="stat-val" id="cnt-all">0</div>
+      </div>
+      <div class="stat-card" onclick="filterByStatus('접수')">
+        <div class="stat-label">접수</div>
+        <div class="stat-val" id="cnt-접수">0</div>
+      </div>
+      <div class="stat-card" onclick="filterByStatus('진행중')">
+        <div class="stat-label">진행중</div>
+        <div class="stat-val" id="cnt-진행중">0</div>
+      </div>
+      <div class="stat-card expiry" onclick="filterByExpiry('critical')">
+        <div class="stat-label">만기 D-7 이내</div>
+        <div class="stat-val" id="cnt-expiry">0</div>
+      </div>
+      <div class="stat-card soon" onclick="filterByExpiry('warn')">
+        <div class="stat-label">만기 D-14 이내</div>
+        <div class="stat-val" id="cnt-soon">0</div>
+      </div>
+    </div>
+
+    <!-- 필터 -->
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="🔍 의뢰인명, 업무명으로 검색" oninput="renderList()">
+      <select id="filterStatus" onchange="renderList()">
+        <option value="">상태 전체</option>
+        <option value="접수">접수</option>
+        <option value="진행중">진행중</option>
+        <option value="완료">완료</option>
+        <option value="보류">보류</option>
+      </select>
+      <select id="filterBiz" onchange="renderList()">
+        <option value="">분야 전체</option>
+        <option value="인허가">인허가</option>
+        <option value="인증">인증</option>
+        <option value="출입국">출입국</option>
+        <option value="조달">조달</option>
+        <option value="행정심판">행정심판</option>
+        <option value="사실조사">사실조사</option>
+        <option value="기타">기타</option>
+      </select>
+      <select id="sortBy" onchange="renderList()">
+        <option value="recent">최신 등록순</option>
+        <option value="expiry">만기일 임박순</option>
+        <option value="name">의뢰인명순</option>
+      </select>
+      <button class="btn-reset-filter" onclick="resetFilters()">✕ 초기화</button>
+    </div>
+
+    <!-- 목록 -->
+    <div id="contractList"></div>
+  </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-title">🗑 계약 삭제</div>
+    <div class="modal-desc" id="deleteDesc">이 수임계약을 삭제하시겠습니까?<br>삭제된 데이터는 복구할 수 없습니다.</div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeDeleteModal()">취소</button>
+      <button class="modal-confirm" onclick="confirmDelete()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="../js/main.js"></script>
+<script src="js/weimin-contracts.js"></script>
+<script>
+if (typeof WeiminCMS !== 'undefined' && !WeiminCMS.isAdmin()) location.href = 'index.html';
+
+const BIZ_ICON = { 인허가:'📋', 인증:'🏆', 출입국:'✈️', 조달:'🏛️', 행정심판:'⚖️', 사실조사:'🔍', 기타:'📌' };
+let _deleteTarget = null;
+let _activeExpiryFilter = null;
+
+(async () => {
+  await WeiminContracts.tryRestoreDir();
+  updateDriveBanner(WeiminContracts.isConnected());
+  renderStats();
+  renderList();
+})();
+
+function updateDriveBanner(ok) {
+  const banner = document.getElementById('driveBanner');
+  const msg    = document.getElementById('driveMsg');
+  const btn    = document.getElementById('btnConnect');
+  if (ok) {
+    banner.className = 'drive-banner connected';
+    msg.textContent  = '✅ D드라이브 폴더에 자동 저장 중';
+    btn.className    = 'btn-connect done';
+    btn.textContent  = '✔ 연결됨';
+    btn.onclick      = null;
+  } else {
+    banner.className = 'drive-banner disconnected';
+    msg.textContent  = '💾 D드라이브 미연결 — 로컬 저장 중';
+    btn.className    = 'btn-connect do';
+    btn.textContent  = '📁 폴더 연결';
+    btn.onclick      = connectDrive;
+  }
+}
+
+async function connectDrive() {
+  const r = await WeiminContracts.connectFolder();
+  if (r.ok) { updateDriveBanner(true); toast('D드라이브 연결 완료!', 'success'); }
+  else if (!r.cancelled) toast('폴더 연결 실패: ' + (r.error || ''), 'error');
+}
+
+function renderStats() {
+  const all = WeiminContracts.getAll();
+  document.getElementById('cnt-all').textContent    = all.length;
+  document.getElementById('cnt-접수').textContent   = all.filter(c => c.status === '접수').length;
+  document.getElementById('cnt-진행중').textContent = all.filter(c => c.status === '진행중').length;
+
+  const active = all.filter(c => c.status !== '완료' && c.expiryDate);
+  document.getElementById('cnt-expiry').textContent = active.filter(c => {
+    const d = WeiminContracts.daysUntil(c.expiryDate); return d >= 0 && d <= 7;
+  }).length;
+  document.getElementById('cnt-soon').textContent = active.filter(c => {
+    const d = WeiminContracts.daysUntil(c.expiryDate); return d >= 0 && d <= 14;
+  }).length;
+}
+
+function filterByStatus(s) {
+  _activeExpiryFilter = null;
+  document.getElementById('filterStatus').value = s;
+  renderList();
+}
+
+function filterByExpiry(level) {
+  _activeExpiryFilter = level;
+  document.getElementById('filterStatus').value = '';
+  renderList();
+}
+
+function resetFilters() {
+  _activeExpiryFilter = null;
+  document.getElementById('searchInput').value  = '';
+  document.getElementById('filterStatus').value = '';
+  document.getElementById('filterBiz').value    = '';
+  document.getElementById('sortBy').value       = 'recent';
+  renderList();
+}
+
+function getExpiryInfo(c) {
+  if (!c.expiryDate || c.status === '완료') return { cls: 'badge-done', label: c.status === '완료' ? '완료' : '만기일 없음', cardCls: c.status === '완료' ? 'status-complete' : '' };
+  const d = WeiminContracts.daysUntil(c.expiryDate);
+  if (d < 0)      return { cls: 'badge-critical', label: `D+${Math.abs(d)} 만기 경과`, cardCls: 'expiry-critical' };
+  if (d === 0)    return { cls: 'badge-critical', label: 'D-Day 만기!', cardCls: 'expiry-critical' };
+  if (d <= 7)     return { cls: 'badge-critical', label: `D-${d} 만기임박`, cardCls: 'expiry-critical' };
+  if (d <= 14)    return { cls: 'badge-warn',     label: `D-${d}`,       cardCls: 'expiry-warn' };
+  if (d <= 30)    return { cls: 'badge-caution',  label: `D-${d}`,       cardCls: 'expiry-caution' };
+  return           { cls: 'badge-ok',      label: `D-${d}`,       cardCls: 'expiry-ok' };
+}
+
+function renderList() {
+  let all = WeiminContracts.getAll();
+  const search  = document.getElementById('searchInput').value.toLowerCase();
+  const status  = document.getElementById('filterStatus').value;
+  const biz     = document.getElementById('filterBiz').value;
+  const sort    = document.getElementById('sortBy').value;
+
+  if (search) all = all.filter(c =>
+    (c.clientName || '').toLowerCase().includes(search) ||
+    (c.bizDetail  || '').toLowerCase().includes(search)
+  );
+  if (status) all = all.filter(c => c.status === status);
+  if (biz)    all = all.filter(c => c.bizType === biz);
+
+  if (_activeExpiryFilter === 'critical') {
+    all = all.filter(c => c.expiryDate && c.status !== '완료' && WeiminContracts.daysUntil(c.expiryDate) <= 7 && WeiminContracts.daysUntil(c.expiryDate) >= 0);
+  } else if (_activeExpiryFilter === 'warn') {
+    all = all.filter(c => c.expiryDate && c.status !== '완료' && WeiminContracts.daysUntil(c.expiryDate) <= 14 && WeiminContracts.daysUntil(c.expiryDate) >= 0);
+  }
+
+  if (sort === 'expiry') {
+    all.sort((a, b) => {
+      if (!a.expiryDate) return 1; if (!b.expiryDate) return -1;
+      return new Date(a.expiryDate) - new Date(b.expiryDate);
+    });
+  } else if (sort === 'name') {
+    all.sort((a, b) => (a.clientName || '').localeCompare(b.clientName || ''));
+  }
+
+  const el = document.getElementById('contractList');
+
+  if (!all.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📂</div><h3>수임계약이 없습니다</h3><p>새 계약을 등록하면 여기에 표시됩니다</p></div>`;
+    return;
+  }
+
+  el.innerHTML = all.map(c => {
+    const ei = getExpiryInfo(c);
+    const feeStr = c.fee ? (+c.fee).toLocaleString() + '원' : '—';
+    const icon = BIZ_ICON[c.bizType] || '📌';
+    return `
+      <div class="c-card ${ei.cardCls}" id="card-${c.id}">
+        <div class="c-left">
+          <div class="c-biz-icon">${icon}</div>
+          <div class="c-biz-label">${c.bizType || '기타'}</div>
+        </div>
+        <div class="c-mid">
+          <div class="c-top-row">
+            <span class="c-name">${esc(c.clientName)}</span>
+            ${c.bizDetail ? `<span class="c-detail">${esc(c.bizDetail)}</span>` : ''}
+            <span class="c-expiry-badge ${ei.cls}">${ei.label}</span>
+          </div>
+          <div class="c-meta">
+            ${c.contractDate ? `<span>📅 계약 ${c.contractDate}</span>` : ''}
+            ${c.expiryDate   ? `<span>⏰ 만기 ${c.expiryDate}</span>` : ''}
+            ${c.clientPhone  ? `<span>📞 ${esc(c.clientPhone)}</span>` : ''}
+            <span>💰 ${feeStr}</span>
+            ${c.manager ? `<span>👤 ${esc(c.manager)}</span>` : ''}
+          </div>
+          ${c.memo ? `<div style="font-size:12px;color:var(--sub);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px">📝 ${esc(c.memo)}</div>` : ''}
+        </div>
+        <div class="c-right">
+          <select class="status-sel" onchange="quickStatus('${c.id}', this.value)">
+            <option ${c.status==='접수'   ?'selected':''}>접수</option>
+            <option ${c.status==='진행중' ?'selected':''}>진행중</option>
+            <option ${c.status==='완료'   ?'selected':''}>완료</option>
+            <option ${c.status==='보류'   ?'selected':''}>보류</option>
+          </select>
+          <div class="c-actions">
+            <a class="c-btn" href="contract-new.html?edit=${c.id}">✏️ 수정</a>
+            <button class="c-btn del" onclick="askDelete('${c.id}','${esc(c.clientName)}')">🗑</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  renderStats();
+}
+
+async function quickStatus(id, status) {
+  await WeiminContracts.update(id, { status });
+  toast(`상태가 "${status}"로 변경되었습니다`, 'info');
+  renderList();
+}
+
+function askDelete(id, name) {
+  _deleteTarget = id;
+  document.getElementById('deleteDesc').innerHTML = `<strong>${name}</strong> 계약을 삭제하시겠습니까?<br>삭제된 데이터는 복구할 수 없습니다.`;
+  document.getElementById('deleteModal').classList.add('show');
+}
+
+function closeDeleteModal() {
+  _deleteTarget = null;
+  document.getElementById('deleteModal').classList.remove('show');
+}
+
+async function confirmDelete() {
+  if (!_deleteTarget) return;
+  await WeiminContracts.remove(_deleteTarget);
+  closeDeleteModal();
+  toast('삭제되었습니다.', 'info');
+  renderList();
+}
+
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let _tt;
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = (type==='success'?'✅ ':type==='error'?'❌ ':'ℹ️ ') + msg;
+  el.className = 'show ' + type;
+  clearTimeout(_tt);
+  _tt = setTimeout(() => { el.className = ''; }, 3200);
+}
+</script>
+</body>
+</html>
