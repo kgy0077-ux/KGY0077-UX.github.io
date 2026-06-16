@@ -376,17 +376,31 @@ zh:{
 }
 };
 
-/* ── 현재 언어 ── */
+/* ── 쿠키 헬퍼 (localStorage 차단 환경 대비) ── */
+function saveCookie(lang) {
+  document.cookie = 'wcms_lang=' + lang + '; path=/; max-age=31536000; SameSite=Lax';
+}
+function getCookie() {
+  var m = document.cookie.match(/(?:^|;\s*)wcms_lang=([^;]+)/);
+  return (m && T[m[1]]) ? m[1] : null;
+}
+
+/* ── 현재 언어 (URL param → localStorage → cookie 순서로 확인) ── */
 function cur() {
-  /* URL ?lang=xx 파라미터 우선 → localStorage 저장 후 반환 */
+  /* 1) URL ?lang=xx 파라미터 우선 */
   try {
     var p = new URLSearchParams(location.search).get('lang');
     if (p && T[p]) {
       try { localStorage.setItem('wcms_lang', p); } catch(e) {}
+      saveCookie(p);
       return p;
     }
   } catch(e) {}
-  try { return localStorage.getItem('wcms_lang') || 'ko'; } catch(e) { return 'ko'; }
+  /* 2) localStorage */
+  try { var ls = localStorage.getItem('wcms_lang'); if (ls && T[ls]) return ls; } catch(e) {}
+  /* 3) cookie */
+  var ck = getCookie(); if (ck) return ck;
+  return 'ko';
 }
 
 /* ── 내부 링크에 ?lang= 파라미터 부착 (페이지 이동시 언어 유지) ── */
@@ -434,7 +448,8 @@ function apply(lang) {
 
 /* ── 언어 설정 ── */
 function set(lang) {
-  localStorage.setItem('wcms_lang', lang);
+  try { localStorage.setItem('wcms_lang', lang); } catch(e) {}
+  saveCookie(lang);
   apply(lang);
   closeDrop();
 }
@@ -472,17 +487,6 @@ function injectBtn() {
     }, true);
   }
 
-  /* 모바일: 햄버거 메뉴 하단에 언어 선택 행 주입 */
-  var mobileUl = document.querySelector('.mobile-menu ul');
-  if (mobileUl) {
-    var li = document.createElement('li');
-    li.className = 'wi-lang-mobile-row';
-    li.innerHTML =
-      '<button class="wi-lang-opt wi-mob" data-lang="ko" onclick="WI18n.set(\'ko\')">🇰🇷 한국어</button>' +
-      '<button class="wi-lang-opt wi-mob" data-lang="en" onclick="WI18n.set(\'en\')">🇺🇸 English</button>' +
-      '<button class="wi-lang-opt wi-mob" data-lang="zh" onclick="WI18n.set(\'zh\')">🇨🇳 中文</button>';
-    mobileUl.appendChild(li);
-  }
 }
 
 window.WI18n = { set: set, toggle: toggleDrop };
