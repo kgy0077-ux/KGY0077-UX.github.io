@@ -780,6 +780,22 @@ body.homepage .mobile-menu {
     .wi-lang-wrap { display: none; }
 }
 
+/* ── 모바일 언어 선택 행 ── */
+li.wi-lang-mobile-row {
+    display: flex; gap: 0; border-top: 1px solid rgba(255,255,255,.1);
+    border-bottom: none !important;
+}
+li.wi-lang-mobile-row .wi-lang-opt.wi-mob {
+    flex: 1; padding: 14px 6px; font-size: 14px; font-weight: 700;
+    text-align: center; color: #aac; background: none; border: none;
+    border-right: 1px solid rgba(255,255,255,.07); cursor: pointer;
+    transition: background .15s, color .15s; font-family: inherit;
+}
+li.wi-lang-mobile-row .wi-lang-opt.wi-mob:last-child { border-right: none; }
+li.wi-lang-mobile-row .wi-lang-opt.wi-mob:hover { background: rgba(255,255,255,.07); color: #fff; }
+li.wi-lang-mobile-row .wi-lang-opt.wi-mob.wi-active { color: #FFD54F; font-weight: 900; }
+@media (min-width: 901px) { li.wi-lang-mobile-row { display: none; } }
+
 /* ── 영어/중문 히어로 제목 자동 축소 ── */
 html[lang="en"] .hero-left h1 {
     font-size: clamp(1.35rem, 2.4vw, 1.9rem);

@@ -452,23 +452,37 @@ function toggleDrop() {
 
 /* ── 버튼 주입 ── */
 function injectBtn() {
+  /* 데스크톱: .btn-call 앞에 드롭다운 버튼 주입 */
   var btn = document.querySelector('.btn-call');
-  if (!btn) return;
-  var lang = cur();
-  var wrap = document.createElement('div');
-  wrap.className = 'wi-lang-wrap';
-  wrap.innerHTML =
-    '<button class="wi-lang-btn" onclick="WI18n.toggle()" type="button" aria-label="언어 선택">' +
-    '🌐 <span id="wiLangInd">' + lang.toUpperCase() + '</span> ▾</button>' +
-    '<div class="wi-lang-drop" id="wiLangDrop" style="display:none;">' +
-    '<button class="wi-lang-opt" data-lang="ko" onclick="WI18n.set(\'ko\')">🇰🇷 한국어</button>' +
-    '<button class="wi-lang-opt" data-lang="en" onclick="WI18n.set(\'en\')">🇺🇸 English</button>' +
-    '<button class="wi-lang-opt" data-lang="zh" onclick="WI18n.set(\'zh\')">🇨🇳 中文</button>' +
-    '</div>';
-  btn.parentNode.insertBefore(wrap, btn);
-  document.addEventListener('click', function(e) {
-    if (!wrap.contains(e.target)) closeDrop();
-  }, true);
+  if (btn) {
+    var lang = cur();
+    var wrap = document.createElement('div');
+    wrap.className = 'wi-lang-wrap';
+    wrap.innerHTML =
+      '<button class="wi-lang-btn" onclick="WI18n.toggle()" type="button" aria-label="언어 선택">' +
+      '🌐 <span id="wiLangInd">' + lang.toUpperCase() + '</span> ▾</button>' +
+      '<div class="wi-lang-drop" id="wiLangDrop" style="display:none;">' +
+      '<button class="wi-lang-opt" data-lang="ko" onclick="WI18n.set(\'ko\')">🇰🇷 한국어</button>' +
+      '<button class="wi-lang-opt" data-lang="en" onclick="WI18n.set(\'en\')">🇺🇸 English</button>' +
+      '<button class="wi-lang-opt" data-lang="zh" onclick="WI18n.set(\'zh\')">🇨🇳 中文</button>' +
+      '</div>';
+    btn.parentNode.insertBefore(wrap, btn);
+    document.addEventListener('click', function(e) {
+      if (!wrap.contains(e.target)) closeDrop();
+    }, true);
+  }
+
+  /* 모바일: 햄버거 메뉴 하단에 언어 선택 행 주입 */
+  var mobileUl = document.querySelector('.mobile-menu ul');
+  if (mobileUl) {
+    var li = document.createElement('li');
+    li.className = 'wi-lang-mobile-row';
+    li.innerHTML =
+      '<button class="wi-lang-opt wi-mob" data-lang="ko" onclick="WI18n.set(\'ko\')">🇰🇷 한국어</button>' +
+      '<button class="wi-lang-opt wi-mob" data-lang="en" onclick="WI18n.set(\'en\')">🇺🇸 English</button>' +
+      '<button class="wi-lang-opt wi-mob" data-lang="zh" onclick="WI18n.set(\'zh\')">🇨🇳 中文</button>';
+    mobileUl.appendChild(li);
+  }
 }
 
 window.WI18n = { set: set, toggle: toggleDrop };
