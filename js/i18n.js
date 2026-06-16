@@ -406,6 +406,7 @@ function cur() {
 /* ── 내부 링크에 ?lang= 파라미터 부착 (페이지 이동시 언어 유지) ── */
 function updateLinks(lang) {
   document.querySelectorAll('a[href]').forEach(function(a) {
+    if (a.classList.contains('logo')) return;  /* 로고 링크는 제외 */
     var href = a.getAttribute('href');
     if (!href || /^(https?:|tel:|mailto:|#)/.test(href)) return;
     try {
