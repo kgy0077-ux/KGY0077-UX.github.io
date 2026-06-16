@@ -385,21 +385,17 @@ function getCookie() {
   return (m && T[m[1]]) ? m[1] : null;
 }
 
-/* ── 현재 언어 (URL param → localStorage → cookie 순서로 확인) ── */
+/* ── 현재 언어 (localStorage → cookie → URL param 순서로 확인) ── */
 function cur() {
-  /* 1) URL ?lang=xx 파라미터 우선 */
+  /* 1) localStorage (사용자 명시 선택 최우선) */
+  try { var ls = localStorage.getItem('wcms_lang'); if (ls && T[ls]) return ls; } catch(e) {}
+  /* 2) cookie */
+  var ck = getCookie(); if (ck) return ck;
+  /* 3) URL ?lang=xx (저장 없음 — 현재 페이지 표시에만 사용) */
   try {
     var p = new URLSearchParams(location.search).get('lang');
-    if (p && T[p]) {
-      try { localStorage.setItem('wcms_lang', p); } catch(e) {}
-      saveCookie(p);
-      return p;
-    }
+    if (p && T[p]) return p;
   } catch(e) {}
-  /* 2) localStorage */
-  try { var ls = localStorage.getItem('wcms_lang'); if (ls && T[ls]) return ls; } catch(e) {}
-  /* 3) cookie */
-  var ck = getCookie(); if (ck) return ck;
   return 'ko';
 }
 
