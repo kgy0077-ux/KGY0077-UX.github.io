@@ -46,7 +46,7 @@ ko:{
   'svc.banner.p':'인허가 · 인증 · 출입국 · 조달 · 행정심판 · 사실조사',
   'svc.badge':'업무 분야','svc.h2':'전문 행정서비스',
   'svc.sub':'위민 행정사사무소는 다양한 분야의 행정 업무를 전문적으로 처리합니다',
-  'svc.c.permit.h':'인허가','svc.c.permit.p':'각종 사업 인허가 신청 및 갱신, 허가·등록·신고 대행',
+  'svc.c.permit.h':'인허가','svc.c.permit.p':'각종 사업 인허가 신청 및 갱신, 허가·등록·신고 대리',
   'svc.c.permit.t1':'영업허가','svc.c.permit.t2':'건축허가','svc.c.permit.t3':'개설허가',
   'svc.c.cert.h':'인증','svc.c.cert.p':'각종 인증 취득 및 갱신, ISO·벤처·이노비즈 등 인증 대행',
   'svc.c.cert.t1':'ISO 인증','svc.c.cert.t2':'벤처인증','svc.c.cert.t3':'이노비즈',
