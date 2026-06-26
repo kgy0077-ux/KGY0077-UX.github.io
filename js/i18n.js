@@ -54,7 +54,7 @@ ko:{
   'svc.c.imm.t1':'비자 신청','svc.c.imm.t2':'체류허가','svc.c.imm.t3':'귀화신청',
   'svc.c.pro.h':'조달','svc.c.pro.p':'정부 조달 입찰 지원, 나라장터 등록, 계약 체결 대행',
   'svc.c.pro.t1':'조달 입찰','svc.c.pro.t2':'나라장터','svc.c.pro.t3':'계약 지원',
-  'svc.c.app.h':'행정심판','svc.c.app.p':'행정처분 불복 심판 청구, 취소·의무이행·부작위 심판 대리',
+  'svc.c.app.h':'행정심판','svc.c.app.p':'행정처분 불복 심판 청구, 취소·의무이행·부작위 심판 대행',
   'svc.c.app.t1':'처분 취소','svc.c.app.t2':'의무이행','svc.c.app.t3':'부작위',
   'svc.c.fct.h':'사실조사','svc.c.fct.p':'현지 사실 확인 및 조사, 사실확인서 작성, 공적 증명 업무',
   'svc.c.fct.t1':'현지 조사','svc.c.fct.t2':'사실확인','svc.c.fct.t3':'현황 조사',
