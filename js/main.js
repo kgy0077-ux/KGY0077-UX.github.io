@@ -154,12 +154,17 @@ const WeiminCMS = (function () {
         });
     }
 
+    /* ── HTML 이스케이프 ── */
+    function escHtml(s) {
+        return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
     /* ── 필요 서류 목록 재구성 ── */
     function buildDocList(key) {
         const val = get(key);
         const list = document.querySelector('.doc-list');
         if (!list || !val) return;
-        list.innerHTML = val.split('\n').filter(s => s.trim()).map(s => `<li>${s.trim()}</li>`).join('');
+        list.innerHTML = val.split('\n').filter(s => s.trim()).map(s => `<li>${escHtml(s.trim())}</li>`).join('');
     }
 
     /* ── 페이지에 콘텐츠 적용 ── */
@@ -204,16 +209,6 @@ const WeiminCMS = (function () {
         const s = document.createElement('style');
         s.id = 'wcms-style';
         s.textContent = `
-            /* 비로그인 관리자 링크 */
-            .wcms-float-link {
-                position: fixed; bottom: 18px; right: 18px; z-index: 9000;
-                background: rgba(10,25,40,.7); color: #aab; padding: 7px 16px;
-                border-radius: 20px; font-size: 12px; text-decoration: none;
-                backdrop-filter: blur(4px); transition: all .2s;
-                border: 1px solid rgba(255,255,255,.1);
-            }
-            .wcms-float-link:hover { background: rgba(10,25,40,.95); color: #fff; }
-
             /* 관리자 툴바 */
             .wcms-toolbar {
                 position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
@@ -242,15 +237,11 @@ const WeiminCMS = (function () {
         // admin 폴더 내 페이지에서는 주입하지 않음
         if (decodeURIComponent(location.pathname).includes('/admin/')) return;
 
+        // 비로그인 방문자에게는 관리자 진입 버튼을 노출하지 않음
+        // (관리자는 admin/index.html을 직접 북마크하여 접속)
+        if (!isAdmin()) return;
+
         const base = adminBasePath();
-        if (!isAdmin()) {
-            const a = document.createElement('a');
-            a.href = base + 'index.html';
-            a.className = 'wcms-float-link';
-            a.textContent = '🔐 관리자';
-            document.body.appendChild(a);
-            return;
-        }
         const bar = document.createElement('div');
         bar.className = 'wcms-toolbar';
         bar.innerHTML = `
