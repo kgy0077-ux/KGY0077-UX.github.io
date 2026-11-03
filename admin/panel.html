@@ -673,7 +673,6 @@ function doChangePw() {
     const confirm = document.getElementById('pw-confirm').value;
     const msg     = document.getElementById('pw-msg');
 
-    const stored = localStorage.getItem('wcms_pw') || 'weimin2024';
 
     const show = (text, color) => {
         msg.style.display = 'block';
@@ -684,7 +683,7 @@ function doChangePw() {
     };
 
     if (!cur)          { show('현재 비밀번호를 입력해주세요.', 'err'); return; }
-    if (cur !== stored){ show('현재 비밀번호가 올바르지 않습니다.', 'err'); return; }
+    if (!WeiminCMS.login(cur)){ show('현재 비밀번호가 올바르지 않습니다.', 'err'); return; }
     if (nw.length < 6) { show('새 비밀번호는 6자 이상이어야 합니다.', 'err'); return; }
     if (nw !== confirm){ show('새 비밀번호가 일치하지 않습니다.', 'err'); return; }
 

@@ -8,6 +8,9 @@
     <meta name="keywords" content="행정사 구독, 기업행정구독, 행정사 월정액, 인허가 유지관리, 행정 파트너, 대전행정사 구독플랜">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://wiminaa.kr/pages/%EA%B5%AC%EB%8F%85%ED%94%8C%EB%9E%9C/index.html">
+    <link rel="icon" href="../../favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" href="../../images/favicon-192.png">
+    <link rel="apple-touch-icon" href="../../images/apple-touch-icon.png">
     <link rel="stylesheet" href="../../css/style.css">
     <style>
     /* ── 구독플랜 전용 스타일 ── */
@@ -110,7 +113,7 @@
     <div class="container">
         <div class="header-inner">
             <a href="../../index.html" class="logo">
-                <img src="../../images/행정사마크.png" alt="행정사회" class="logo-mark">
+                <img src="../../images/행정사마크.png" alt="행정사사무소 위민" class="logo-mark">
                 <span class="logo-name" data-i18n="logo.name">행정사사무소 위민</span>
             </a>
             <nav class="nav">
@@ -337,23 +340,36 @@
             </div>
             <div class="footer-right">
                 <a href="../../index.html" class="logo">
-                    <img src="../../images/행정사마크.png" alt="행정사회" class="logo-mark">
+                    <img src="../../images/행정사마크.png" alt="행정사사무소 위민" class="logo-mark">
                     <span class="logo-name" data-i18n="logo.name">행정사사무소 위민</span>
                 </a>
             </div>
         </div>
         <div class="footer-info">
-            <span data-i18n="footer.addr">📍 대전광역시 서구 둔산대로 117번길 66, 208호</span>
+            <span data-i18n="footer.addr">📍 대전광역시 서구 둔산대로117번길 66, 2층 208호 (만년동, 골든타워)</span>
             <span>📞 042-477-6764</span>
             <span data-i18n="footer.fax">📠 팩스 0504-299-6764</span>
             <span>💬 <a href="http://pf.kakao.com/_yHGjX" target="_blank" rel="noopener" style="color:inherit;" data-i18n="footer.kakao">카카오톡 채널</a></span>
+            <span>📝 <a href="https://blog.naver.com/wimin_aa" target="_blank" rel="noopener" style="color:inherit;" data-i18n="footer.blog">네이버 블로그</a></span>
         </div>
         <div class="footer-bottom">
-            <p data-i18n="footer.copy">© 2025 행정사사무소 위민. All rights reserved.</p>
+            <p class="footer-reg" data-i18n="footer.reg" style="font-size:12px;opacity:.75;margin-bottom:6px;">대표 행정사 김공요 · 사업자등록번호 504-76-00579 · 법무부 출입국민원 대행기관 등록번호 26-TJ-RG-009</p>
+            <p data-i18n="footer.copy">© 2026 행정사사무소 위민. All rights reserved.</p>
         </div>
     </div>
 </footer>
 <script src="../../js/i18n.js"></script>
 <script src="../../js/main.js"></script>
+<!-- 블로그 바로가기 플로팅 버튼 -->
+<a href="https://blog.naver.com/wimin_aa" target="_blank" rel="noopener" class="blog-fab" aria-label="행정사사무소 위민 네이버 블로그 바로가기" title="네이버 블로그 바로가기">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>
+    <span data-i18n="fab.blog">블로그</span>
+</a>
+<style>
+.blog-fab{position:fixed;right:20px;bottom:24px;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:64px;height:64px;border-radius:50%;background:#03C75A;color:#fff;font-size:11px;font-weight:800;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
+.blog-fab:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.3);color:#fff}
+@media (max-width:600px){.blog-fab{right:14px;bottom:16px;width:56px;height:56px;font-size:10px}}
+@media print{.blog-fab{display:none}}
+</style>
 </body>
 </html>
